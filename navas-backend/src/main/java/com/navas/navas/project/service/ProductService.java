@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -78,4 +79,8 @@ public class ProductService {
                         workbook.close();
                 }
         }
+
+        public List<Product> getAllProducts() {
+                return productRepository.findAll();
+            }
 }
