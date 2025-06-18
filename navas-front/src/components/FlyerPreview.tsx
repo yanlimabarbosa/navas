@@ -55,7 +55,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
 
         {/* Product Grid */}
         <div className="p-4">
-          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-[800px]">
+          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-[850px]">
             {gridPositions.map((group, index) => (
               <div key={index} className="h-full">
                 {group ? (
@@ -74,7 +74,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         <div 
           className="relative text-white mt-auto"
           style={{ 
-            height: '65px',
+            height: '90px',
             background: config.footerImageUrl 
               ? `url(${config.footerImageUrl}) center/cover` 
               : `linear-gradient(to right, ${config.secondaryColor}, #1e3a8a)`
