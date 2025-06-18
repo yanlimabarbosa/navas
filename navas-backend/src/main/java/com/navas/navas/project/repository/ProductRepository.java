@@ -1,10 +1,11 @@
 package com.navas.navas.project.repository;
 
-import com.navas.navas.project.model.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
+import com.navas.navas.project.model.Product;
 
-public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
-    java.util.Optional<ProductEntity> findByCode(String code);
+import java.util.Optional;
+
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    Optional<Product> findByCode(String code);
 }
