@@ -21,13 +21,28 @@ public class FlyerConfig {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Column(length = 500)
     private String title;
+    
+    @Column(length = 1000)
     private String headerText;
+    
+    @Column(length = 1000)
     private String footerText;
+    
+    @Column(columnDefinition = "TEXT")
     private String headerImageUrl;
+    
+    @Column(columnDefinition = "TEXT")
     private String footerImageUrl;
+    
+    @Column(length = 50)
     private String backgroundColor;
+    
+    @Column(length = 50)
     private String primaryColor;
+    
+    @Column(length = 50)
     private String secondaryColor;
 
     @OneToOne(mappedBy = "config")
