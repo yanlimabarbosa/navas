@@ -1,5 +1,6 @@
 package com.navas.navas.project.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,12 +23,19 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String code;
 
-    @Column(nullable = false)
-    private String title;
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private String specifications;
 
     @Column(nullable = false)
     private Double price;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_group_id")
+    @JsonIgnore
+    private ProductGroup productGroup;
 }

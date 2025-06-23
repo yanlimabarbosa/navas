@@ -1,0 +1,14 @@
+package com.navas.navas.project.dto;
+
+import lombok.Data;
+import java.util.List;
+
+@Data
+public class ProductGroupDTO {
+    private String id;
+    private String type;
+    private String title;
+    private String image;
+    private int position;
+    private List<ProductDTO> products;
+} 

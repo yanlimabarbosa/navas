@@ -1,5 +1,80 @@
 import * as XLSX from 'xlsx';
-import { Product, ExcelData } from '../types';
+import { ProductGroup, Product, ExcelData } from '../types';
+
+// Helper to determine the group type based on its products
+function getGroupType(products: Product[]): 'single' | 'same-price' | 'different-price' {
+  if (products.length === 1) {
+    return 'single';
+  }
+  // Check if all prices are the same
+  const firstPrice = products[0].price;
+  const allSamePrice = products.every(p => p.price === firstPrice);
+  return allSamePrice ? 'same-price' : 'different-price';
+}
+
+export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      reader.abort();
+      reject(new Error("Erro ao ler o arquivo."));
+    };
+
+    reader.onload = (event) => {
+      const data = event.target?.result;
+      if (!data) {
+        return reject(new Error("Nenhum dado encontrado no arquivo."));
+      }
+
+      try {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
+
+        // Group rows by 'Posicao'
+        const groupedByPosition = json.reduce((acc, row) => {
+          const position = row.Posicao;
+          if (!acc[position]) {
+            acc[position] = [];
+          }
+          acc[position].push(row);
+          return acc;
+        }, {} as Record<number, ExcelData[]>);
+
+        // Transform grouped data into ProductGroup[]
+        const productGroups: ProductGroup[] = Object.entries(groupedByPosition).map(([position, rows]) => {
+          const firstRow = rows[0];
+          
+          const products: Product[] = rows.map((row, index) => ({
+            id: `prod-${position}-${index}`,
+            code: String(row.Codigo),
+            price: Number(String(row.Preco).replace(',', '.')), // Handle both dot and comma for decimals
+            description: row.Descricao,
+            specifications: row.Diferencial,
+          }));
+
+          return {
+            id: `group-${position}`,
+            position: Number(position),
+            title: firstRow.Descricao,
+            image: `imagens_produtos/${firstRow.Codigo}.png`,
+            products: products,
+            type: getGroupType(products),
+          };
+        });
+
+        resolve(productGroups);
+      } catch (e) {
+        console.error(e);
+        reject(new Error("Formato de arquivo inválido ou planilha corrompida."));
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+};
 
 export class ExcelProcessor {
   static async processFile(file: File): Promise<Product[]> {

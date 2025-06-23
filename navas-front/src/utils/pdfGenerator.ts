@@ -1,16 +1,37 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+// Helper to fetch and embed fonts
+const embedFonts = async (clonedDoc: Document) => {
+  try {
+    const fontUrl = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap';
+    const response = await fetch(fontUrl);
+    const cssText = await response.text();
+    
+    const style = clonedDoc.createElement('style');
+    style.appendChild(clonedDoc.createTextNode(cssText));
+    clonedDoc.head.appendChild(style);
+    
+    // Give the browser a moment to acknowledge the new styles
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+  } catch (error) {
+    console.error('Error embedding fonts:', error);
+  }
+};
+
 export class PDFGenerator {
   static async generateFromElement(element: HTMLElement, filename: string = 'encarte-promocional'): Promise<void> {
     try {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: '#ffffff',
         width: element.offsetWidth,
         height: element.offsetHeight,
+        onclone: (clonedDoc) => {
+          embedFonts(clonedDoc);
+        }
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -50,8 +71,10 @@ export class PDFGenerator {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          embedFonts(clonedDoc);
+        }
       });
 
       const link = document.createElement('a');

@@ -1,7 +1,7 @@
 export interface Product {
   id: string;
   code: string;
-  description: string;
+  description?: string;
   price: number;
   category?: string;
   specifications?: string;
@@ -11,6 +11,7 @@ export interface ProductGroup {
   id: string;
   type: 'single' | 'same-price' | 'different-price';
   title?: string;
+  image?: string;
   products: Product[];
   position: number;
 }
@@ -40,9 +41,12 @@ export interface SavedProject {
 }
 
 export interface ExcelData {
-  code: string;
-  produto: string;
-  preco: number;
+  Posicao: number;
+  Codigo: string;
+  Descricao: string;
+  Diferencial?: string;
+  Preco: number;
+  Imagem: string;
 }
 
 export interface ImageDimensions {
