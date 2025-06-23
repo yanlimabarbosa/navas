@@ -30,7 +30,7 @@ This is a **fullstack desktop application** that combines:
 ## 📁 Project Structure
 
 ```
-FREELA-RAFSOOR/
+ROOT-FOLDER/
 ├── electron/                    # Electron main process files
 │   ├── main.js                 # Main process entry point
 │   └── preload.js              # Preload script for security
@@ -75,7 +75,7 @@ FREELA-RAFSOOR/
 ```bash
 # 1. Clone the repository
 git clone <your-repo-url>
-cd FREELA-RAFSOOR
+cd ROOT-FOLDER
 
 # 2. Install all dependencies (frontend + electron)
 npm install
@@ -124,7 +124,7 @@ git --version
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd FREELA-RAFSOOR
+cd ROOT-FOLDER
 
 # Install root dependencies (Electron + build tools)
 npm install
@@ -261,9 +261,24 @@ spring.datasource.url=jdbc:h2:file:./navasdb
 ```javascript
 // electron/main.js
 const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+// Portable: store DB in a 'database' folder next to the .exe
+const exeDir = process.cwd();
+const dbDir = path.join(exeDir, 'database');
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+const dbPath = path.join(dbDir, 'navas-db');
 
 // 1. Start backend server
-const backendProcess = spawn('java', ['-jar', 'backend.jar']);
+const backendProcess = spawn('java', [
+  '-jar',
+  jarPath,
+  `--spring.profiles.active=prod`,
+  `--spring.datasource.url=jdbc:h2:file:${dbPath};DB_CLOSE_ON_EXIT=FALSE`
+]);
 
 // 2. Create window and load frontend
 const mainWindow = new BrowserWindow({

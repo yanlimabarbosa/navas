@@ -47,7 +47,13 @@ function startBackend() {
       backendArgs = ['spring-boot:run'];
       backendCwd = path.join(__dirname, '../navas-backend');
     } else {
-      const dbPath = path.join(app.getPath('userData'), 'database', 'navas-db');
+      // Portable: store DB in a 'database' folder next to the .exe
+      const exeDir = path.dirname(process.execPath);
+      const dbDir = path.join(exeDir, 'database');
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+      const dbPath = path.join(dbDir, 'navas-db');
       const jarPath = path.join(process.resourcesPath, 'backend', 'navas-0.0.1-SNAPSHOT.jar');
       
       backendPath = 'java';
