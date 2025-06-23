@@ -1,119 +1,206 @@
-import React, { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import html2canvas from 'html2canvas';
-import { saveAs } from 'file-saver';
+import React, { useState, useRef, useCallback } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
-import { ProductGroup, FlyerConfig } from './types';
-import { processExcelFile } from './utils/excelProcessor';
-import { getProjects, saveOrUpdateProject, getProjectById, ProjectSummary, SaveProjectPayload } from './api/projects';
+import { FileUploader } from './components/FileUploader';
+import { ThemeProvider } from './components/theme-provider';
+import { ThemeToggle } from './components/theme-toggle';
+import { Button } from './components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { Toaster } from './components/ui/toaster';
+import { useToast } from './hooks/use-toast';
+import { 
+  Download, 
+  FileSpreadsheet, 
+  Save, 
+  Upload, 
+  Settings, 
+  Eye,
+  ArrowLeft,
+  Plus,
+  Trash2
+} from 'lucide-react';
 import { PDFGenerator } from './utils/pdfGenerator';
+import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
+import { FlyerConfig, ProductGroup, Product, SavedProject } from './types';
 
-const defaultConfig: Omit<FlyerConfig, 'id' | 'createdAt' | 'updatedAt'> = {
-  title: 'Encarte de Ofertas',
-  headerText: 'Ofertas Válidas emquanto durarem os estoques.',
-  footerText: 'Imagens meramente ilustrativas.',
-  backgroundColor: '#FFFFFF',
-  primaryColor: '#d91e2b',
-  secondaryColor: '#2b3990',
-  headerImageUrl: undefined,
-  footerImageUrl: undefined,
-};
-
-type View = 
-  | { state: 'dashboard' }
-  | { state: 'upload' }
-  | { state: 'preview'; groups: ProductGroup[]; config: FlyerConfig; currentProjectId?: string };
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
-  const [view, setView] = useState<View>({ state: 'dashboard' });
-  const queryClient = useQueryClient();
-  const flyerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const [view, setView] = useState<{
+    state: 'dashboard' | 'upload' | 'preview';
+    config?: FlyerConfig;
+    groups?: ProductGroup[];
+    products?: Product[];
+  }>({ state: 'dashboard' });
+
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const flyerRef = useRef<HTMLDivElement>(null);
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useQuery<ProjectSummary[]>({
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
+    staleTime: 1000 * 60, // 1 minute
   });
 
   // Mutations
   const saveMutation = useMutation({
-    mutationFn: ({ payload, projectId }: { payload: SaveProjectPayload; projectId?: string }) => {
-      console.log('Mutation called with:', { payload, projectId });
-      return saveOrUpdateProject(payload, projectId);
+    mutationFn: (projectData: any) => {
+      if (currentProjectId) {
+        return updateProject(currentProjectId, projectData);
+      }
+      return saveProject(projectData);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (!currentProjectId) {
+        setCurrentProjectId(data.id);
+      }
+      toast({
+        title: "Sucesso!",
+        description: "Projeto salvo com sucesso!",
+        variant: "success",
+      });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      setView({ state: 'dashboard' });
+    },
+    onError: (error) => {
+      console.error('Erro ao salvar projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar projeto. Tente novamente.",
+        variant: "destructive",
+      });
     },
   });
 
-  // Handlers
+  const deleteMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      setCurrentProjectId(null);
+      setView({ state: 'dashboard' });
+      toast({
+        title: "Sucesso!",
+        description: "Projeto excluído com sucesso!",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir projeto. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      const processedGroups = await processExcelFile(file);
-      if (processedGroups.length > 0) {
-        setView({ 
-          state: 'preview', 
-          groups: processedGroups,
-          config: { ...defaultConfig, id: '', createdAt: new Date(), updatedAt: new Date() },
-          currentProjectId: undefined
-        });
-      } else {
-        alert("Nenhum produto encontrado na planilha.");
-      }
-    } catch (err) {
-      alert((err as Error).message);
+      const groups = await processExcelFile(file);
+      const products = groups.flatMap(group => group.products);
+      
+      setView({
+        state: 'preview',
+        config: {
+          id: 'config-1',
+          title: 'Encarte de Ofertas',
+          headerText: 'Ofertas Válidas até 31/12/2024 ou enquanto durarem os estoques.',
+          footerText: 'Imagens meramente ilustrativas. Preços válidos para todas as lojas da rede.',
+          backgroundColor: '#FFFFFF',
+          primaryColor: '#d91e2b',
+          secondaryColor: '#2b3990',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          headerImageUrl: '',
+          footerImageUrl: '',
+        },
+        groups,
+        products,
+      });
+    } catch (error) {
+      console.error('Erro ao processar arquivo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar arquivo. Verifique se o formato está correto.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleConfigChange = (newConfig: FlyerConfig) => {
-    if (view.state === 'preview') {
-      console.log('handleConfigChange - currentProjectId before:', view.currentProjectId);
-      setView({ ...view, config: newConfig });
-      console.log('handleConfigChange - currentProjectId after:', view.currentProjectId);
+  const handleConfigChange = useCallback((newConfig: FlyerConfig) => {
+    setView(prev => ({
+      ...prev,
+      config: newConfig,
+    }));
+  }, []);
+
+  const handleLoadProject = async (projectId: string) => {
+    try {
+      const project = await getProjectById(projectId);
+      setCurrentProjectId(project.id);
+      
+      setView({
+        state: 'preview',
+        config: {
+          ...project.config,
+          createdAt: new Date(project.config.createdAt || new Date()),
+          updatedAt: new Date(project.config.updatedAt || new Date())
+        },
+        groups: project.groups,
+        products: project.groups.flatMap(group => group.products),
+      });
+    } catch (error) {
+      console.error('Erro ao carregar projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar projeto. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleSaveProject = () => {
-    if (view.state !== 'preview') return;
-    
-    const projectName = view.config.title; 
-    
-    if (!projectName || projectName.trim() === '') {
-      alert("Por favor, defina um 'Título do Encarte' no painel de configurações antes de salvar.");
+    if (!view.config || !view.groups) {
+      toast({
+        title: "Aviso",
+        description: "Nenhum projeto para salvar",
+        variant: "default",
+      });
       return;
     }
 
-    const payload: SaveProjectPayload = {
-      name: projectName,
+    const projectData = {
+      name: view.config.title,
       config: view.config,
       groups: view.groups,
+      products: view.products || [],
     };
-    
-    console.log('handleSaveProject called with currentProjectId:', view.currentProjectId);
-    
-    saveMutation.mutate({ 
-      payload, 
-      projectId: view.currentProjectId 
-    });
+
+    saveMutation.mutate(projectData);
   };
-  
-  const handleLoadProject = async (id: string) => {
-    try {
-        const project = await getProjectById(id);
-        setView({ 
-          state: 'preview', 
-          groups: project.groups, 
-          config: project.config,
-          currentProjectId: project.id 
-        });
-    } catch (err) {
-        alert("Erro ao carregar o projeto.");
+
+  const handleDeleteProject = () => {
+    if (!currentProjectId) {
+      toast({
+        title: "Aviso",
+        description: "Nenhum projeto para excluir",
+        variant: "default",
+      });
+      return;
+    }
+
+    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+      deleteMutation.mutate(currentProjectId);
     }
   };
 
@@ -133,16 +220,26 @@ function App() {
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const element = flyerRef.current;
-      const fileName = view.state === 'preview' ? view.config.title.replace(/ /g, '_') : 'encarte';
+      const fileName = view.state === 'preview' ? view.config?.title.replace(/ /g, '_') : 'encarte';
       
       if (format === 'pdf') {
         await PDFGenerator.generateFromElement(element, fileName);
       } else {
         await PDFGenerator.generateJPG(element, fileName);
       }
+      
+      toast({
+        title: "Sucesso!",
+        description: `Encarte exportado como ${format.toUpperCase()} com sucesso!`,
+        variant: "success",
+      });
     } catch (error) {
       console.error(`Erro ao exportar para ${format.toUpperCase()}:`, error);
-      alert(`Houve um erro ao tentar exportar para ${format.toUpperCase()}.`);
+      toast({
+        title: "Erro",
+        description: `Houve um erro ao tentar exportar para ${format.toUpperCase()}.`,
+        variant: "destructive",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -153,30 +250,64 @@ function App() {
     switch (view.state) {
       case 'dashboard':
         return (
-          <div className="w-full max-w-2xl ml-auto mr-auto">
-            <h1 className="text-3xl font-bold text-center mb-6">Meus Encartes</h1>
-            <button
-              onClick={() => setView({ state: 'upload' })}
-              className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors mb-6"
-            >
-              + Criar Novo Encarte (do Excel)
-            </button>
-            <div className="space-y-3">
-              {isLoadingProjects && <p>Carregando projetos...</p>}
-              {projects?.map(p => (
-                <div key={p.id} onClick={() => handleLoadProject(p.id)} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer flex justify-between items-center">
-                  <span className="font-semibold">{p.name}</span>
-                  <span className="text-sm text-gray-500">
-                    Atualizado em: {new Date(p.updatedAt).toLocaleString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit'
-                    })}
-                  </span>
-                </div>
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-4xl font-bold text-foreground">Meus Encartes</h1>
+                <p className="text-muted-foreground mt-2">Gerencie seus projetos de encartes promocionais</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <ThemeToggle />
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setView({ state: 'upload' })}>
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <Plus className="h-5 w-5 text-primary" />
+                    <CardTitle>Criar Novo Encarte</CardTitle>
+                  </div>
+                  <CardDescription>Comece um novo projeto a partir de uma planilha Excel</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>Upload de Excel</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {isLoadingProjects && (
+                <Card>
+                  <CardContent className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {projects?.map(project => (
+                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleLoadProject(project.id)}>
+                  <CardHeader>
+                    <CardTitle className="line-clamp-1">{project.name}</CardTitle>
+                    <CardDescription>
+                      Atualizado em: {new Date(project.updatedAt).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Eye className="h-4 w-4" />
+                      <span>Clique para abrir</span>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
@@ -184,65 +315,165 @@ function App() {
 
       case 'upload':
         return (
-          <div className="w-full max-w-lg bg-white p-8 rounded-xl shadow-2xl text-center mr-auto ml-auto">
-            <h1 className="text-2xl font-bold mb-6 mr-auto ml-auto">Selecione a Planilha</h1>
-            <input type="file" accept=".xlsx" onChange={handleFileChange} />
-            <button onClick={() => setView({ state: 'dashboard' })} className="text-sm text-gray-500 mt-6">
-              Voltar
-            </button>
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center space-x-4 mb-8">
+                <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Criar Novo Encarte</h1>
+                  <p className="text-muted-foreground">Selecione uma planilha Excel para começar</p>
+                </div>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Upload className="h-5 w-5" />
+                    <span>Upload da Planilha</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Arraste um arquivo Excel aqui ou clique para selecionar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <input 
+                    type="file" 
+                    accept=".xlsx,.xls" 
+                    onChange={handleFileChange}
+                    className="w-full p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </div>
         );
 
       case 'preview':
         return (
-          <div className="w-full max-w-screen-xl mx-auto">
-            <div className="w-full flex justify-between items-center mb-6">
-              <button onClick={() => setView({ state: 'dashboard' })} className="bg-gray-200 py-2 px-4 rounded-lg">
-                  &larr; Voltar ao Dashboard
-              </button>
-              <div className="flex items-center gap-4">
-                <button
-                    onClick={() => handleExport('pdf')}
-                    disabled={isExporting}
-                    className="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 disabled:opacity-50"
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Editor de Encarte</h1>
+                  <p className="text-muted-foreground">Personalize e exporte seu encarte promocional</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={handleSaveProject}
+                  disabled={saveMutation.isPending}
+                  variant="outline"
+                  className="flex items-center space-x-2"
                 >
-                    {isExporting ? 'Exportando...' : 'Exportar como PDF'}
-                </button>
-                <button
-                    onClick={() => handleExport('jpg')}
-                    disabled={isExporting}
-                    className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 disabled:opacity-50"
-                >
-                    {isExporting ? 'Exportando...' : 'Exportar como JPG'}
-                </button>
-                <button
-                    onClick={handleSaveProject}
-                    disabled={saveMutation.isPending}
-                    className="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50"
-                >
-                    {saveMutation.isPending ? 'Salvando...' : view.currentProjectId ? 'Atualizar Encarte' : 'Salvar Encarte'}
-                </button>
+                  <Save className="h-4 w-4" />
+                  <span>{saveMutation.isPending ? 'Salvando...' : (currentProjectId ? 'Atualizar' : 'Salvar')}</span>
+                </Button>
+                {currentProjectId && (
+                  <Button
+                    onClick={handleDeleteProject}
+                    disabled={deleteMutation.isPending}
+                    variant="destructive"
+                    size="icon"
+                    title="Excluir Projeto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+                <ThemeToggle />
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
               <div className="lg:col-span-1">
-                <ConfigPanel config={view.config} onConfigChange={handleConfigChange} />
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="h-5 w-5" />
+                      <span>Configurações</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Personalize o título, cores e textos do seu encarte
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <ConfigPanel config={view.config!} onConfigChange={handleConfigChange} />
+                  </CardContent>
+                </Card>
               </div>
-              <div className="lg:col-span-2 flex justify-center items-start">
-                  <div className="transform scale-90 origin-top">
-                    <FlyerPreview ref={flyerRef} config={view.config} groups={view.groups} />
-                  </div>
+
+              <div className="lg:col-span-2">
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Eye className="h-5 w-5" />
+                        <CardTitle>Visualização</CardTitle>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => handleExport('pdf')}
+                          disabled={isExporting}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>{isExporting ? 'Exportando...' : 'PDF'}</span>
+                        </Button>
+                        <Button
+                          onClick={() => handleExport('jpg')}
+                          disabled={isExporting}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>{isExporting ? 'Exportando...' : 'JPG'}</span>
+                        </Button>
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Preview do seu encarte promocional
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex items-center justify-center overflow-auto">
+                    <div className="transform scale-75 origin-top lg:scale-90">
+                      <FlyerPreview
+                        ref={flyerRef}
+                        config={view.config!}
+                        groups={view.groups!}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
         );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen w-full p-8">
-      {renderContent()}
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        defaultTheme="light"
+        storageKey="navas-theme"
+      >
+        <div className="min-h-screen bg-background text-foreground">
+          {renderContent()}
+        </div>
+        <Toaster />
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

@@ -1,7 +1,11 @@
 import React from 'react';
-import { Settings, Palette, Type, Image as ImageIcon } from 'lucide-react';
-import { FlyerConfig, HEADER_DIMENSIONS, FOOTER_DIMENSIONS } from '../types';
+import { FlyerConfig } from '../types';
+import { Type, Image as ImageIcon, Palette, Settings } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Separator } from './ui/separator';
 
 interface ConfigPanelProps {
   config: FlyerConfig;
@@ -26,122 +30,146 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-      <div className="flex items-center space-x-3">
-        <Settings className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-bold text-gray-900">Configurações do Encarte</h2>
-      </div>
-
-      <div className="space-y-6">
-        {/* Basic Configuration */}
+    <div className="space-y-6">
+      {/* Basic Configuration */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Type className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">Informações Básicas</h3>
+        </div>
+        
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
-              <Type className="w-4 h-4" />
-              <span>Título do Encarte</span>
-            </label>
-            <input
+            <Label htmlFor="title">Título do Encarte</Label>
+            <Input
+              id="title"
               type="text"
               value={config.title}
               onChange={(e) => handleChange('title', e.target.value)}
               placeholder="Ex: Promoções de Janeiro"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Texto do Cabeçalho
-            </label>
-            <textarea
+            <Label htmlFor="headerText">Texto do Cabeçalho</Label>
+            <Textarea
+              id="headerText"
               value={config.headerText}
               onChange={(e) => handleChange('headerText', e.target.value)}
               placeholder="Ex: Ofertas válidas até 31/01/2025"
               rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Texto do Rodapé
-            </label>
-            <textarea
+            <Label htmlFor="footerText">Texto do Rodapé</Label>
+            <Textarea
+              id="footerText"
               value={config.footerText}
               onChange={(e) => handleChange('footerText', e.target.value)}
               placeholder="Ex: Consulte condições especiais"
               rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
+      </div>
 
-        {/* Image Upload Section */}
-        <div className="border-t pt-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <ImageIcon className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Imagens Personalizadas</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <ImageUploader
-              label="Imagem do Cabeçalho"
-              currentImageUrl={config.headerImageUrl}
-              expectedDimensions={HEADER_DIMENSIONS}
-              onImageChange={(imageUrl) => handleImageChange('headerImageUrl', imageUrl)}
-            />
+      <Separator />
 
-            <ImageUploader
-              label="Imagem do Rodapé"
-              currentImageUrl={config.footerImageUrl}
-              expectedDimensions={FOOTER_DIMENSIONS}
-              onImageChange={(imageUrl) => handleImageChange('footerImageUrl', imageUrl)}
-            />
-          </div>
+      {/* Color Configuration */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Palette className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">Cores</h3>
         </div>
-
-        {/* Color Configuration */}
-        <div className="border-t pt-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Palette className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Cores</h3>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cor Primária
-              </label>
-              <input
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="primaryColor">Cor Primária</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="primaryColor"
                 type="color"
                 value={config.primaryColor}
                 onChange={(e) => handleChange('primaryColor', e.target.value)}
-                className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
+                className="w-12 h-10 p-1"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cor Secundária
-              </label>
-              <input
-                type="color"
-                value={config.secondaryColor}
-                onChange={(e) => handleChange('secondaryColor', e.target.value)}
-                className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
+              <Input
+                type="text"
+                value={config.primaryColor}
+                onChange={(e) => handleChange('primaryColor', e.target.value)}
+                placeholder="#d91e2b"
               />
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cor de Fundo
-            </label>
-            <input
-              type="color"
-              value={config.backgroundColor}
-              onChange={(e) => handleChange('backgroundColor', e.target.value)}
-              className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
+          <div>
+            <Label htmlFor="secondaryColor">Cor Secundária</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="secondaryColor"
+                type="color"
+                value={config.secondaryColor}
+                onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                className="w-12 h-10 p-1"
+              />
+              <Input
+                type="text"
+                value={config.secondaryColor}
+                onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                placeholder="#2b3990"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="backgroundColor">Cor de Fundo</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="backgroundColor"
+                type="color"
+                value={config.backgroundColor}
+                onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                className="w-12 h-10 p-1"
+              />
+              <Input
+                type="text"
+                value={config.backgroundColor}
+                onChange={(e) => handleChange('backgroundColor', e.target.value)}
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Image Upload Section */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <ImageIcon className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">Imagens</h3>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <Label>Imagem do Cabeçalho</Label>
+            <ImageUploader
+              label="Imagem do Cabeçalho"
+              currentImage={config.headerImageUrl}
+              onImageChange={(url) => handleImageChange('headerImageUrl', url)}
+              targetDimensions={{ width: 800, height: 200 }}
+            />
+          </div>
+
+          <div>
+            <Label>Imagem do Rodapé</Label>
+            <ImageUploader
+              label="Imagem do Rodapé"
+              currentImage={config.footerImageUrl}
+              onImageChange={(url) => handleImageChange('footerImageUrl', url)}
+              targetDimensions={{ width: 800, height: 150 }}
             />
           </div>
         </div>

@@ -12,6 +12,8 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
   ({ groups, config, className = '' }, ref) => {
     
     console.log("Dentro do FlyerPreview, recebendo os grupos:", groups); // Log de depuração
+    console.log("Número de grupos recebidos:", groups.length);
+    console.log("Posições dos grupos:", groups.map(g => g.position));
 
     // Para uma busca eficiente, criamos um mapa da posição (1-12) para o grupo de produtos.
     // Isso é mais performático do que usar .find() dentro de um loop.
@@ -19,12 +21,20 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
 
     // Criamos um array para representar os 12 quadrantes do encarte.
     const gridSlots = Array.from({ length: 12 }, (_, index) => index + 1);
+    
+    console.log("Grid slots criados:", gridSlots);
+    console.log("Grupos por posição:", Object.fromEntries(groupsByPosition));
 
     return (
       <div 
         ref={ref}
         className={`bg-white shadow-xl rounded-lg overflow-hidden flex flex-col ${className}`}
-        style={{ width: '794px', height: '1123px' }}
+        style={{ 
+          width: '794px', 
+          height: '1123px',
+          maxWidth: '100%',
+          maxHeight: '100vh'
+        }}
       >
         {/* Header */}
         <div 
@@ -66,17 +76,17 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         </div>
 
         {/* Product Grid */}
-        <div className="p-4 flex-grow min-h-0">
-          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-full">
+        <div className="p-4 flex-grow min-h-0 flex flex-col">
+          <div className="grid grid-cols-4 grid-rows-3 gap-2 flex-grow" style={{ minHeight: '600px' }}>
             {gridSlots.map((position) => {
               const groupForPosition = groupsByPosition.get(position);
               
               return (
-                <div key={position} className="h-full">
+                <div key={position} className="h-full min-h-0 flex flex-col">
                   {groupForPosition ? (
                     <ProductCard group={groupForPosition} isPreview={true} />
                   ) : (
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center">
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center flex-grow">
                       <span className="text-gray-400 text-xs">Posição {position}</span>
                     </div>
                   )}
