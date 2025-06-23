@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createProject, getProjects } from '../api/projects';
+import { getProjects, deleteProject, getProjectById, FullProject } from '../api/projects';
 import { Save, FolderOpen, Download, Upload, Trash2, Calendar, Edit3 } from 'lucide-react';
 import { ProjectManager as PM } from '../utils/projectManager'; // TODO: Remove once local storage is fully deprecated
 import { SavedProject, FlyerConfig, ProductGroup, Product } from '../types';
@@ -32,15 +32,14 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
   });
   const [activeTab, setActiveTab] = useState<'save' | 'load'>('save');
 
-  const saveMutation = useMutation({
-    mutationFn: createProject,
-    onSuccess: (savedProject: SavedProject) => {
-      onSaveSuccess(`Projeto "${savedProject.name}" salvo com sucesso!`);
-      setIsModalOpen(false);
-      setProjectName('');
+  const deleteMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      refetchProjects();
+      onSaveSuccess('Projeto excluído com sucesso!');
     },
     onError: () => {
-      onError('Erro ao salvar projeto no servidor');
+      onError('Erro ao excluir projeto');
     }
   });
 
@@ -70,25 +69,41 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
 
     console.log("ProjectToSave",projectToSave)
 
-    saveMutation.mutate(projectToSave);
+    // Note: This will be handled by the parent component's save logic
+    onSaveSuccess('Use o botão "Salvar Encarte" na tela principal para salvar o projeto');
+    setIsModalOpen(false);
   };
 
-  const handleLoadProject = (project: SavedProject) => {
-    onLoadProject(project);
-    setIsModalOpen(false);
-    onSaveSuccess(`Projeto "${project.name}" carregado com sucesso!`);
+  const handleLoadProject = async (projectId: string) => {
+    try {
+      const apiProject = await getProjectById(projectId);
+      
+      // Convert API project to local SavedProject format
+      const localProject: SavedProject = {
+        id: apiProject.id,
+        name: apiProject.name,
+        config: {
+          ...apiProject.config,
+          createdAt: new Date(apiProject.config.createdAt || new Date()),
+          updatedAt: new Date(apiProject.config.updatedAt || new Date())
+        },
+        groups: apiProject.groups,
+        products: apiProject.groups.flatMap(group => group.products),
+        createdAt: new Date(apiProject.updatedAt), // Use updatedAt as fallback for createdAt
+        updatedAt: new Date(apiProject.updatedAt)
+      };
+      
+      onLoadProject(localProject);
+      setIsModalOpen(false);
+      onSaveSuccess(`Projeto "${localProject.name}" carregado com sucesso!`);
+    } catch (error) {
+      onError('Erro ao carregar projeto');
+    }
   };
 
   const handleDeleteProject = (projectId: string) => {
-    // TODO: migrate to API deletion once endpoint is available
     if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
-      const success = PM.deleteProject(projectId);
-      if (success) {
-        refreshProjects();
-        onSaveSuccess('Projeto excluído com sucesso!');
-      } else {
-        onError('Erro ao excluir projeto');
-      }
+      deleteMutation.mutate(projectId);
     }
   };
 
@@ -189,7 +204,14 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                   <li>• Título: {currentConfig.title}</li>
                   <li>• Produtos: {currentProducts.length}</li>
                   <li>• Quadrantes preenchidos: {currentGroups.length}/12</li>
-                  <li>• Última modificação: {currentConfig.updatedAt.toLocaleString('pt-BR')}</li>
+                  <li>• Última modificação: {currentConfig.updatedAt.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}</li>
                 </ul>
               </div>
 
@@ -252,32 +274,27 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">{project.name}</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {project.config.title}
-                          </p>
                           <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                             <span className="flex items-center space-x-1">
                               <Calendar className="w-3 h-3" />
-                              <span>{new Date(project.updatedAt).toLocaleDateString('pt-BR')}</span>
+                              <span>{new Date(project.updatedAt).toLocaleString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })}</span>
                             </span>
-                            <span>{project.products.length} produtos</span>
-                            <span>{project.groups.length}/12 quadrantes</span>
                           </div>
                         </div>
                         <div className="flex space-x-2 ml-4">
                           <button
-                            onClick={() => handleLoadProject(project)}
+                            onClick={() => handleLoadProject(project.id)}
                             className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center space-x-1"
                           >
                             <Edit3 className="w-3 h-3" />
                             <span>Carregar</span>
-                          </button>
-                          <button
-                            onClick={() => handleExportProject(project)}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                          >
-                            <Download className="w-3 h-3" />
-                            <span>Exportar</span>
                           </button>
                           <button
                             onClick={() => handleDeleteProject(project.id)}

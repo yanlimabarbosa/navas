@@ -6,7 +6,7 @@ import { FlyerPreview } from './components/FlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
 import { ProductGroup, FlyerConfig } from './types';
 import { processExcelFile } from './utils/excelProcessor';
-import { getProjects, saveProject, getProjectById, ProjectSummary, SaveProjectPayload } from './api/projects';
+import { getProjects, saveOrUpdateProject, getProjectById, ProjectSummary, SaveProjectPayload } from './api/projects';
 import { PDFGenerator } from './utils/pdfGenerator';
 
 const defaultConfig: Omit<FlyerConfig, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -23,7 +23,7 @@ const defaultConfig: Omit<FlyerConfig, 'id' | 'createdAt' | 'updatedAt'> = {
 type View = 
   | { state: 'dashboard' }
   | { state: 'upload' }
-  | { state: 'preview'; groups: ProductGroup[]; config: FlyerConfig };
+  | { state: 'preview'; groups: ProductGroup[]; config: FlyerConfig; currentProjectId?: string };
 
 function App() {
   const [view, setView] = useState<View>({ state: 'dashboard' });
@@ -39,7 +39,10 @@ function App() {
 
   // Mutations
   const saveMutation = useMutation({
-    mutationFn: saveProject,
+    mutationFn: ({ payload, projectId }: { payload: SaveProjectPayload; projectId?: string }) => {
+      console.log('Mutation called with:', { payload, projectId });
+      return saveOrUpdateProject(payload, projectId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       setView({ state: 'dashboard' });
@@ -57,7 +60,8 @@ function App() {
         setView({ 
           state: 'preview', 
           groups: processedGroups,
-          config: { ...defaultConfig, id: '', createdAt: new Date(), updatedAt: new Date() } 
+          config: { ...defaultConfig, id: '', createdAt: new Date(), updatedAt: new Date() },
+          currentProjectId: undefined
         });
       } else {
         alert("Nenhum produto encontrado na planilha.");
@@ -69,7 +73,9 @@ function App() {
 
   const handleConfigChange = (newConfig: FlyerConfig) => {
     if (view.state === 'preview') {
+      console.log('handleConfigChange - currentProjectId before:', view.currentProjectId);
       setView({ ...view, config: newConfig });
+      console.log('handleConfigChange - currentProjectId after:', view.currentProjectId);
     }
   };
 
@@ -88,13 +94,24 @@ function App() {
       config: view.config,
       groups: view.groups,
     };
-    saveMutation.mutate(payload);
+    
+    console.log('handleSaveProject called with currentProjectId:', view.currentProjectId);
+    
+    saveMutation.mutate({ 
+      payload, 
+      projectId: view.currentProjectId 
+    });
   };
   
   const handleLoadProject = async (id: string) => {
     try {
         const project = await getProjectById(id);
-        setView({ state: 'preview', groups: project.groups, config: project.config });
+        setView({ 
+          state: 'preview', 
+          groups: project.groups, 
+          config: project.config,
+          currentProjectId: project.id 
+        });
     } catch (err) {
         alert("Erro ao carregar o projeto.");
     }
@@ -150,7 +167,14 @@ function App() {
                 <div key={p.id} onClick={() => handleLoadProject(p.id)} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md cursor-pointer flex justify-between items-center">
                   <span className="font-semibold">{p.name}</span>
                   <span className="text-sm text-gray-500">
-                    Atualizado em: {new Date(p.updatedAt).toLocaleDateString()}
+                    Atualizado em: {new Date(p.updatedAt).toLocaleString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
                   </span>
                 </div>
               ))}
@@ -196,7 +220,7 @@ function App() {
                     disabled={saveMutation.isPending}
                     className="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
-                    {saveMutation.isPending ? 'Salvando...' : 'Salvar Encarte'}
+                    {saveMutation.isPending ? 'Salvando...' : view.currentProjectId ? 'Atualizar Encarte' : 'Salvar Encarte'}
                 </button>
               </div>
             </div>
