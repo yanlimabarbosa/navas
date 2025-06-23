@@ -77,4 +77,67 @@ public class FlyerProjectService {
     public Optional<FlyerProject> getProjectById(UUID id) {
         return flyerProjectRepository.findById(id);
     }
+
+    @Transactional
+    public Optional<FlyerProject> updateProject(UUID id, SaveProjectRequest request) {
+        return flyerProjectRepository.findById(id).map(existingProject -> {
+            // Update basic project info
+            existingProject.setName(request.getName());
+            
+            // Update config
+            FlyerConfig config = existingProject.getConfig();
+            if (config == null) {
+                config = new FlyerConfig();
+                config.setFlyerProject(existingProject);
+                existingProject.setConfig(config);
+            }
+            
+            config.setTitle(request.getConfig().getTitle());
+            config.setHeaderText(request.getConfig().getHeaderText());
+            config.setFooterText(request.getConfig().getFooterText());
+            config.setHeaderImageUrl(request.getConfig().getHeaderImageUrl());
+            config.setFooterImageUrl(request.getConfig().getFooterImageUrl());
+            config.setBackgroundColor(request.getConfig().getBackgroundColor());
+            config.setPrimaryColor(request.getConfig().getPrimaryColor());
+            config.setSecondaryColor(request.getConfig().getSecondaryColor());
+            
+            // Clear existing product groups and recreate them
+            existingProject.getProductGroups().clear();
+            
+            // Map new Product Groups and Products
+            existingProject.setProductGroups(request.getGroups().stream().map(groupDTO -> {
+                ProductGroup group = new ProductGroup();
+                group.setPosition(groupDTO.getPosition());
+                group.setType(groupDTO.getType());
+                group.setTitle(groupDTO.getTitle());
+                // Remember our logic: the image path is derived from the first product's code
+                group.setImage(String.format("imagens_produtos/%s.png", groupDTO.getProducts().get(0).getCode()));
+                
+                group.setProducts(groupDTO.getProducts().stream().map(productDTO -> {
+                    Product product = new Product();
+                    product.setCode(productDTO.getCode());
+                    product.setDescription(productDTO.getDescription());
+                    product.setSpecifications(productDTO.getSpecifications());
+                    product.setPrice(productDTO.getPrice());
+                    return product;
+                }).collect(Collectors.toList()));
+                
+                // Set bidirectional relationships
+                group.getProducts().forEach(p -> p.setProductGroup(group));
+                group.setFlyerProject(existingProject);
+                
+                return group;
+            }).collect(Collectors.toList()));
+            
+            return flyerProjectRepository.save(existingProject);
+        });
+    }
+
+    @Transactional
+    public boolean deleteProject(UUID id) {
+        return flyerProjectRepository.findById(id).map(project -> {
+            flyerProjectRepository.delete(project);
+            return true;
+        }).orElse(false);
+    }
 } 
