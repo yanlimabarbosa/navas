@@ -48,7 +48,10 @@
     ],
     "win": {
       "target": "portable",
-      "sign": false
+      "sign": false,
+      "signAndEditExecutable": false,
+      "certificateFile": null,
+      "certificatePassword": null
     },
     "mac": {
       "target": "dmg",
