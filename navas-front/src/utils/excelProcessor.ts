@@ -55,11 +55,13 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
             specifications: row.Diferencial,
           }));
 
+          let imgPath = `imagens_produtos/${firstRow.Codigo}.png`;
+          if (imgPath.startsWith('/')) imgPath = imgPath.slice(1);
           return {
             id: `group-${position}`,
             position: Number(position),
             title: firstRow.Descricao,
-            image: `imagens_produtos/${firstRow.Codigo}.png`,
+            image: imgPath,
             products: products,
             groupType: getGroupType(products),
           };

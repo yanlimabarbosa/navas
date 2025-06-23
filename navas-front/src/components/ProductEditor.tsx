@@ -75,7 +75,9 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
     if (editingGroup.products.length > 0) {
       const groupToSave = { ...editingGroup };
       if (groupToSave.groupType === 'single' && groupToSave.products.length > 0) {
-        groupToSave.image = `imagens_produtos/${groupToSave.products[0].code}.png`;
+        let imgPath = `imagens_produtos/${groupToSave.products[0].code}.png`;
+        if (imgPath.startsWith('/')) imgPath = imgPath.slice(1);
+        groupToSave.image = imgPath;
       }
       onSave(groupToSave);
       onClose();

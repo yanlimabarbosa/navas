@@ -24,7 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
     <div className="w-full h-32 mb-2 flex items-center justify-center overflow-hidden">
       {group.image ? (
         <img 
-          src={`/${group.image}`} 
+          src={group.image.startsWith('/') ? group.image.slice(1) : group.image}
           alt={group.title || group.products[0]?.description || 'Imagem do produto'} 
           className="max-w-full max-h-full object-contain"
         />
