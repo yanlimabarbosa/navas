@@ -21,8 +21,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
   const { data: savedProjects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
-    staleTime: 1000 * 60, // 1 minute
-    enabled: isModalOpen // only fetch when modal is open
+    staleTime: 0, // Immediate refetch when invalidated
   });
 
   const deleteMutation = useMutation({

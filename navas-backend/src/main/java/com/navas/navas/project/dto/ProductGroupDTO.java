@@ -6,7 +6,7 @@ import java.util.List;
 @Data
 public class ProductGroupDTO {
     private String id;
-    private String type;
+    private String groupType;
     private String title;
     private String image;
     private int position;

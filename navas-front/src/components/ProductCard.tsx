@@ -38,7 +38,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
 
   // Renderiza a descrição principal do card
   const TitleSection = () => {
-    const title = group.type === 'single' ? group.products[0]?.description : group.title;
+    const title = group.groupType === 'single' ? group.products[0]?.description : group.title;
     return (
       <h3 className="text-sm font-semibold text-gray-800 text-center leading-tight mb-2 flex-grow line-clamp-3">
         {title}
@@ -100,7 +100,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
   const renderContent = () => {
     if (!group) return null;
 
-    switch (group.type) {
+    switch (group.groupType) {
       case 'single':
         return renderSingleProduct(group.products[0]);
       case 'same-price':

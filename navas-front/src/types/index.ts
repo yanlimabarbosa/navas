@@ -7,14 +7,14 @@ export interface Product {
   specifications?: string;
 }
 
-export interface ProductGroup {
+export type ProductGroup = {
   id: string;
-  type: 'single' | 'same-price' | 'different-price';
-  title?: string;
+  title: string;
   image?: string;
   products: Product[];
+  groupType: 'single' | 'same-price' | 'different-price';
   position: number;
-}
+};
 
 export interface FlyerConfig {
   id: string;
@@ -63,3 +63,14 @@ export const FOOTER_DIMENSIONS: ImageDimensions = {
   width: 1240,
   height: 204
 };
+
+// Electron API types
+declare global {
+  interface Window {
+    electronAPI?: {
+      getBackendUrl: () => Promise<string>;
+    };
+  }
+}
+
+export {};

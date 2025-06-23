@@ -24,7 +24,7 @@ public class ProductGroup {
     private UUID id;
 
     @Column(name = "group_type", nullable = false)
-    private String type; // e.g., "single", "same-price", "different-price"
+    private String groupType; // Renamed from "type" to avoid H2 keyword conflict
 
     @Column(columnDefinition = "TEXT")
     private String title;

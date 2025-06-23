@@ -44,10 +44,9 @@ public class FlyerProjectService {
         List<ProductGroup> productGroups = request.getGroups().stream().map(groupDTO -> {
             ProductGroup group = new ProductGroup();
             group.setPosition(groupDTO.getPosition());
-            group.setType(groupDTO.getType());
+            group.setGroupType(groupDTO.getGroupType());
             group.setTitle(groupDTO.getTitle());
-            // Remember our logic: the image path is derived from the first product's code
-            group.setImage(String.format("imagens_produtos/%s.png", groupDTO.getProducts().get(0).getCode()));
+            group.setImage(groupDTO.getImage());
             
             List<Product> products = groupDTO.getProducts().stream().map(productDTO -> {
                 Product product = new Product();
@@ -106,10 +105,9 @@ public class FlyerProjectService {
             List<ProductGroup> newProductGroups = request.getGroups().stream().map(groupDTO -> {
                 ProductGroup group = new ProductGroup();
                 group.setPosition(groupDTO.getPosition());
-                group.setType(groupDTO.getType());
+                group.setGroupType(groupDTO.getGroupType());
                 group.setTitle(groupDTO.getTitle());
-                // Remember our logic: the image path is derived from the first product's code
-                group.setImage(String.format("imagens_produtos/%s.png", groupDTO.getProducts().get(0).getCode()));
+                group.setImage(groupDTO.getImage());
                 
                 List<Product> products = groupDTO.getProducts().stream().map(productDTO -> {
                     Product product = new Product();

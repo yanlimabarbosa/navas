@@ -61,7 +61,7 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
             title: firstRow.Descricao,
             image: `imagens_produtos/${firstRow.Codigo}.png`,
             products: products,
-            type: getGroupType(products),
+            groupType: getGroupType(products),
           };
         });
 
@@ -85,17 +85,16 @@ export class ExcelProcessor {
       const worksheet = workbook.Sheets[sheetName];
       
       const jsonData: ExcelData[] = XLSX.utils.sheet_to_json(worksheet, {
-        header: ['code', 'produto', 'preco'],
         range: 1 // Skip header row
       });
 
       return jsonData
-        .filter(row => row.code && row.produto && row.preco)
+        .filter(row => row.Codigo && row.Descricao && row.Preco)
         .map((row, index) => ({
           id: `product-${index}`,
-          code: String(row.code).trim(),
-          description: String(row.produto).trim(),
-          price: Number(row.preco) || 0,
+          code: String(row.Codigo).trim(),
+          description: String(row.Descricao).trim(),
+          price: Number(row.Preco) || 0,
         }));
     } catch (error) {
       console.error('Error processing Excel file:', error);

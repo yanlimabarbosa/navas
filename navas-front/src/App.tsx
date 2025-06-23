@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
@@ -27,11 +27,9 @@ import { PDFGenerator } from './utils/pdfGenerator';
 import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
 import { FlyerConfig, ProductGroup, Product, SavedProject } from './types';
 
-// Create a client
-const queryClient = new QueryClient();
-
 function App() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<{
     state: 'dashboard' | 'upload' | 'preview';
     config?: FlyerConfig;
@@ -47,7 +45,7 @@ function App() {
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 0, // Immediate refetch when invalidated
   });
 
   // Mutations

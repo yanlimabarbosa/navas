@@ -21,8 +21,9 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 }) => {
   const [editingGroup, setEditingGroup] = useState<ProductGroup>({
     id: group?.id || `group-${Date.now()}`,
-    type: group?.type || 'single',
+    groupType: group?.groupType || 'single',
     title: group?.title || '',
+    image: group?.image || '',
     products: group?.products || [],
     position
   });
@@ -32,14 +33,22 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setEditingGroup({
+        id: group?.id || `group-${Date.now()}`,
+        groupType: group?.groupType || 'single',
+        title: group?.title || '',
+        image: group?.image || '',
+        products: group?.products || [],
+        position
+      });
       setAvailableProducts(products.filter(p => 
-        !editingGroup.products.find(gp => gp.id === p.id)
+        !(group?.products || []).find(gp => gp.id === p.id)
       ));
     }
-  }, [isOpen, products, editingGroup.products]);
+  }, [isOpen, products, group, position]);
 
   const filteredProducts = availableProducts.filter(product =>
-    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -64,7 +73,11 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
 
   const handleSave = () => {
     if (editingGroup.products.length > 0) {
-      onSave(editingGroup);
+      const groupToSave = { ...editingGroup };
+      if (groupToSave.groupType === 'single' && groupToSave.products.length > 0) {
+        groupToSave.image = `imagens_produtos/${groupToSave.products[0].code}.png`;
+      }
+      onSave(groupToSave);
       onClose();
     }
   };
@@ -101,11 +114,8 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                   Tipo de Quadrante
                 </label>
                 <select
-                  value={editingGroup.type}
-                  onChange={(e) => setEditingGroup(prev => ({ 
-                    ...prev, 
-                    type: e.target.value as ProductGroup['type'] 
-                  }))}
+                  value={editingGroup.groupType}
+                  onChange={(e) => setEditingGroup(prev => ({ ...prev, groupType: e.target.value as ProductGroup['groupType'] }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="single">Produto Único</option>
@@ -114,7 +124,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                 </select>
               </div>
 
-              {(editingGroup.type === 'same-price' || editingGroup.type === 'different-price') && (
+              {(editingGroup.groupType === 'same-price' || editingGroup.groupType === 'different-price') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Título do Grupo
@@ -144,7 +154,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                           <p className="text-sm font-semibold text-green-600">
                             R$ {product.price.toFixed(2)}
                           </p>
-                          {(editingGroup.type === 'same-price' || editingGroup.type === 'different-price') && (
+                          {(editingGroup.groupType === 'same-price' || editingGroup.groupType === 'different-price') && (
                             <input
                               type="text"
                               placeholder="Especificações (ex: 220V, Azul, 10mm)"
@@ -200,7 +210,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
                       </div>
                       <button
                         onClick={() => handleAddProduct(product)}
-                        disabled={editingGroup.type === 'single' && editingGroup.products.length >= 1}
+                        disabled={editingGroup.groupType === 'single' && editingGroup.products.length >= 1}
                         className="text-blue-500 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-5 h-5" />
