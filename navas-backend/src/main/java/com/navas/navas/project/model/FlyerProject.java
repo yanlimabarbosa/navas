@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,8 +31,8 @@ public class FlyerProject {
     @JoinColumn(name = "config_id", referencedColumnName = "id")
     private FlyerConfig config;
 
-    @OneToMany(mappedBy = "flyerProject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductGroup> productGroups;
+    @OneToMany(mappedBy = "flyerProject", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProductGroup> productGroups = new ArrayList<>();
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -47,5 +48,14 @@ public class FlyerProject {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Helper method to properly manage the bidirectional relationship
+    public void setProductGroups(List<ProductGroup> productGroups) {
+        this.productGroups.clear();
+        if (productGroups != null) {
+            this.productGroups.addAll(productGroups);
+            productGroups.forEach(group -> group.setFlyerProject(this));
+        }
     }
 } 

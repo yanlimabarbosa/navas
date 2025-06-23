@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,8 +34,8 @@ public class ProductGroup {
     @Column(nullable = false)
     private int position;
 
-    @OneToMany(mappedBy = "productGroup", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Product> products;
+    @OneToMany(mappedBy = "productGroup", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flyer_project_id")
@@ -42,7 +43,10 @@ public class ProductGroup {
 
     // Helper method to sync both sides of the relationship
     public void setProducts(List<Product> products) {
-        this.products = products;
-        products.forEach(product -> product.setProductGroup(this));
+        this.products.clear();
+        if (products != null) {
+            this.products.addAll(products);
+            products.forEach(product -> product.setProductGroup(this));
+        }
     }
 } 

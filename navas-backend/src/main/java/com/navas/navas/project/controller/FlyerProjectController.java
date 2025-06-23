@@ -26,6 +26,13 @@ public class FlyerProjectController {
         return ResponseEntity.ok(FlyerProjectResponseDTO.fromEntity(savedProject));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<FlyerProjectResponseDTO> updateProject(@PathVariable UUID id, @RequestBody SaveProjectRequest request) {
+        return flyerProjectService.updateProject(id, request)
+                .map(project -> ResponseEntity.ok(FlyerProjectResponseDTO.fromEntity(project)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping
     public ResponseEntity<List<ProjectSummaryDTO>> getAllProjects() {
         return ResponseEntity.ok(flyerProjectService.getAllProjects());
@@ -36,5 +43,13 @@ public class FlyerProjectController {
         return flyerProjectService.getProjectById(id)
                 .map(project -> ResponseEntity.ok(FlyerProjectResponseDTO.fromEntity(project)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
+        if (flyerProjectService.deleteProject(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 } 

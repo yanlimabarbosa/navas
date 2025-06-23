@@ -41,7 +41,7 @@ public class FlyerProjectService {
         config.setFlyerProject(project);
 
         // Map Product Groups and Products
-        project.setProductGroups(request.getGroups().stream().map(groupDTO -> {
+        List<ProductGroup> productGroups = request.getGroups().stream().map(groupDTO -> {
             ProductGroup group = new ProductGroup();
             group.setPosition(groupDTO.getPosition());
             group.setType(groupDTO.getType());
@@ -49,27 +49,28 @@ public class FlyerProjectService {
             // Remember our logic: the image path is derived from the first product's code
             group.setImage(String.format("imagens_produtos/%s.png", groupDTO.getProducts().get(0).getCode()));
             
-            group.setProducts(groupDTO.getProducts().stream().map(productDTO -> {
+            List<Product> products = groupDTO.getProducts().stream().map(productDTO -> {
                 Product product = new Product();
                 product.setCode(productDTO.getCode());
                 product.setDescription(productDTO.getDescription());
                 product.setSpecifications(productDTO.getSpecifications());
                 product.setPrice(productDTO.getPrice());
                 return product;
-            }).collect(Collectors.toList()));
+            }).collect(Collectors.toList());
             
-            // Set bidirectional relationships
-            group.getProducts().forEach(p -> p.setProductGroup(group));
+            group.setProducts(products);
             group.setFlyerProject(project);
             
             return group;
-        }).collect(Collectors.toList()));
+        }).collect(Collectors.toList());
+        
+        project.setProductGroups(productGroups);
         
         return flyerProjectRepository.save(project);
     }
 
     public List<ProjectSummaryDTO> getAllProjects() {
-        return flyerProjectRepository.findAll().stream()
+        return flyerProjectRepository.findAllOrderByUpdatedAtDesc().stream()
                 .map(project -> new ProjectSummaryDTO(project.getId(), project.getName(), project.getUpdatedAt()))
                 .collect(Collectors.toList());
     }
@@ -101,11 +102,8 @@ public class FlyerProjectService {
             config.setPrimaryColor(request.getConfig().getPrimaryColor());
             config.setSecondaryColor(request.getConfig().getSecondaryColor());
             
-            // Clear existing product groups and recreate them
-            existingProject.getProductGroups().clear();
-            
-            // Map new Product Groups and Products
-            existingProject.setProductGroups(request.getGroups().stream().map(groupDTO -> {
+            // Create new product groups
+            List<ProductGroup> newProductGroups = request.getGroups().stream().map(groupDTO -> {
                 ProductGroup group = new ProductGroup();
                 group.setPosition(groupDTO.getPosition());
                 group.setType(groupDTO.getType());
@@ -113,21 +111,23 @@ public class FlyerProjectService {
                 // Remember our logic: the image path is derived from the first product's code
                 group.setImage(String.format("imagens_produtos/%s.png", groupDTO.getProducts().get(0).getCode()));
                 
-                group.setProducts(groupDTO.getProducts().stream().map(productDTO -> {
+                List<Product> products = groupDTO.getProducts().stream().map(productDTO -> {
                     Product product = new Product();
                     product.setCode(productDTO.getCode());
                     product.setDescription(productDTO.getDescription());
                     product.setSpecifications(productDTO.getSpecifications());
                     product.setPrice(productDTO.getPrice());
                     return product;
-                }).collect(Collectors.toList()));
+                }).collect(Collectors.toList());
                 
-                // Set bidirectional relationships
-                group.getProducts().forEach(p -> p.setProductGroup(group));
+                group.setProducts(products);
                 group.setFlyerProject(existingProject);
                 
                 return group;
-            }).collect(Collectors.toList()));
+            }).collect(Collectors.toList());
+            
+            // Use the helper method to properly set product groups
+            existingProject.setProductGroups(newProductGroups);
             
             return flyerProjectRepository.save(existingProject);
         });
