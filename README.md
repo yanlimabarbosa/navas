@@ -723,4 +723,24 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Happy Coding! 🚀**
 
-This comprehensive documentation should give you a deep understanding of the entire application architecture and help you maintain, extend, and troubleshoot the system effectively. 
+This comprehensive documentation should give you a deep understanding of the entire application architecture and help you maintain, extend, and troubleshoot the system effectively.
+
+# 🖥️ How to Run the Electron Build (Production Executable)
+
+## Quick Start for End Users
+
+1. **Download the ZIP file** containing the Electron build (usually named `Navas-Promocoes.zip` or similar).
+2. **Extract** the ZIP file to a folder on your computer (e.g., `C:\Users\YourName\Desktop\NavasPromo`).
+3. **Open the extracted folder**. You should see files like:
+   - `Navas Promoções.exe`
+   - `ffmpeg.dll`, `icudtl.dat`, and other `.dll` files
+   - `resources/`, `locales/`, etc.
+4. **Double-click** `Navas Promoções.exe` to start the app.
+5. **Do not move or delete any files** in the folder. All files are required for the app to run.
+
+## Important Notes
+- **You must keep all files together** in the same folder. The `.exe` will not work if you move it alone.
+- **The database is stored in your Windows user profile** (AppData) by default:
+  - `%APPDATA%\navas-electron-app\database\navas-db.mv.db`
+- **To backup your data**, copy the `navas-db.mv.db` file from the above location.
+- **If you want a portable version** (database in the same folder as the .exe), ask your developer for a custom build. 
