@@ -31,7 +31,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
   return (
     <div className="space-y-6">
-      {/* Basic Configuration */}
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
           <Type className="w-5 h-5 text-primary" />

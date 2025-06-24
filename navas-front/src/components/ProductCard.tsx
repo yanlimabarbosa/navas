@@ -20,6 +20,8 @@ const formatPrice = (price: number) => {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = false }) => {
   // Renderiza a área da imagem
+  console.log("Dentro do ProductCard, recebendo o grupo:", group);
+
   const ImageSection = () => (
     <div className="w-full h-32 mb-2 flex items-center justify-center overflow-hidden">
       {group.image ? (
