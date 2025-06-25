@@ -1,11 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
-import { FileUploader } from './components/FileUploader';
 import { ThemeProvider } from './components/theme-provider';
 import { ThemeToggle } from './components/theme-toggle';
 import { Button } from './components/ui/button';
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 import { PDFGenerator } from './utils/pdfGenerator';
 import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
-import { FlyerConfig, ProductGroup, Product, SavedProject } from './types';
+import { FlyerConfig, ProductGroup, Product } from './types';
 
 function App() {
   const { toast } = useToast();
@@ -223,7 +222,13 @@ function App() {
       if (format === 'pdf') {
         await PDFGenerator.generateFromElement(element, fileName);
       } else {
-        await PDFGenerator.generateJPG(element, fileName);
+        // Use the new method for JPEG export that creates a dedicated export element
+        if (view.config && view.groups) {
+          await PDFGenerator.generateJPGFromConfig(view.config, view.groups, fileName);
+        } else {
+          // Fallback to the old method if config/groups are not available
+          await PDFGenerator.generateJPG(element, fileName);
+        }
       }
       
       toast({
@@ -440,13 +445,11 @@ function App() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex items-center justify-center overflow-auto">
-                    <div className="transform scale-75 origin-top lg:scale-90">
                       <FlyerPreview
                         ref={flyerRef}
                         config={view.config!}
                         groups={view.groups!}
                       />
-                    </div>
                   </CardContent>
                 </Card>
               </div>

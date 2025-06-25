@@ -10,40 +10,28 @@ interface FlyerPreviewProps {
 
 export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
   ({ groups, config, className = '' }, ref) => {
-    
-    console.log("Dentro do FlyerPreview, recebendo os grupos:", groups); // Log de depuração
-    console.log("Número de grupos recebidos:", groups.length);
-    console.log("Posições dos grupos:", groups.map(g => g.position));
-
-    // Para uma busca eficiente, criamos um mapa da posição (1-12) para o grupo de produtos.
-    // Isso é mais performático do que usar .find() dentro de um loop.
     const groupsByPosition = new Map(groups.map(group => [group.position, group]));
-
-    // Criamos um array para representar os 12 quadrantes do encarte.
     const gridSlots = Array.from({ length: 12 }, (_, index) => index + 1);
-    
-    console.log("Grid slots criados:", gridSlots);
-    console.log("Grupos por posição:", Object.fromEntries(groupsByPosition));
 
     return (
-      <div 
+      <div
         ref={ref}
         className={`bg-white shadow-xl rounded-lg overflow-hidden flex flex-col ${className}`}
-        style={{ 
-          width: '794px', 
-          height: '1123px',
+        style={{
+          width: '100%',
+          height: 'auto',
           maxWidth: '100%',
-          maxHeight: '100vh'
+          maxHeight: 'none',
         }}
       >
         {/* Header */}
-        <div 
+        <div
           className="relative text-white text-center"
-          style={{ 
+          style={{
             height: '150px',
             flexShrink: 0,
-            background: config.headerImageUrl 
-              ? `url(${config.headerImageUrl}) center/cover` 
+            background: config.headerImageUrl
+              ? `url(${config.headerImageUrl}) center/cover`
               : `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
           }}
         >
@@ -51,14 +39,14 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
             <>
               <div className="absolute inset-0 bg-pattern opacity-10"></div>
               <div className="relative z-10 p-6 h-full flex flex-col justify-center items-center">
-                <h2 
+                <h2
                   className="text-4xl font-black bg-white text-red-600 px-4 py-2 rounded inline-block max-w-full tracking-normal"
                   style={{ letterSpacing: '0.1px' }}
                 >
                   {config.title || 'Encarte sem Título'}
                 </h2>
                 {config.headerText && (
-                  <p 
+                  <p
                     className="text-lg mt-3 font-medium tracking-normal"
                     style={{ letterSpacing: '0.1px' }}
                   >
@@ -76,17 +64,16 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         </div>
 
         {/* Product Grid */}
-        <div className="p-4 flex-grow min-h-0 flex flex-col">
-          <div className="grid grid-cols-4 grid-rows-3 gap-2 flex-grow" style={{ minHeight: '600px' }}>
+        <div className="p-4 flex-grow flex flex-col">
+          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-[800px]" style={{ height: '800px' }}>
             {gridSlots.map((position) => {
               const groupForPosition = groupsByPosition.get(position);
-              
               return (
-                <div key={position} className="h-full min-h-0 flex flex-col">
+                <div key={position} className="h-full">
                   {groupForPosition ? (
                     <ProductCard group={groupForPosition} isPreview={true} />
                   ) : (
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center flex-grow">
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center">
                       <span className="text-gray-400 text-xs">Posição {position}</span>
                     </div>
                   )}
@@ -97,13 +84,13 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         </div>
 
         {/* Footer */}
-        <div 
+        <div
           className="relative text-white"
-          style={{ 
+          style={{
             height: '65px',
             flexShrink: 0,
-            background: config.footerImageUrl 
-              ? `url(${config.footerImageUrl}) center/cover` 
+            background: config.footerImageUrl
+              ? `url(${config.footerImageUrl}) center/cover`
               : `linear-gradient(to right, ${config.secondaryColor}, #1e3a8a)`
           }}
         >

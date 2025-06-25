@@ -122,3 +122,40 @@
     display: none !important;
   }
 }
+
+/* Export mode styles for better JPEG generation */
+.export-mode {
+  transform: none !important;
+  scale: none !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.export-mode * {
+  transform: none !important;
+  scale: none !important;
+}
+
+/* Ensure flexbox works consistently in export mode */
+.export-mode .flex {
+  display: flex !important;
+}
+
+.export-mode .flex-col {
+  flex-direction: column !important;
+}
+
+.export-mode .flex-1 {
+  flex: 1 1 0% !important;
+}
+
+.export-mode .h-full {
+  height: 100% !important;
+}
+
+.export-mode .mt-auto {
+  margin-top: auto !important;
+}

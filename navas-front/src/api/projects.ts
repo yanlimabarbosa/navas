@@ -67,15 +67,10 @@ export const deleteProject = async (id: string): Promise<void> => {
     await apiClient.delete(`/projects/${id}`);
 };
 
-// Helper function to save or update project
 export const saveOrUpdateProject = async (projectData: SaveProjectPayload, existingId?: string): Promise<FullProject> => {
-    console.log('saveOrUpdateProject called with:', { projectData, existingId });
-    
     if (existingId) {
-        console.log('Using PUT to update project:', existingId);
         return updateProject(existingId, projectData);
     } else {
-        console.log('Using POST to create new project');
         return saveProject(projectData);
     }
 };

@@ -7,28 +7,36 @@ interface ProductCardProps {
 }
 
 // Helper para formatar o preço de forma consistente
-const formatPrice = (price: number) => {
-  const parts = price.toFixed(2).split('.');
+export const formatPrice = (price: number) => {
+  const [intPart, decimal] = price.toFixed(2).split(".");
+
   return (
-    <>
-      <span className="text-sm font-medium">R$</span>
-      <span className="text-2xl font-bold">{parts[0]}</span>
-      <span className="text-sm font-bold">,{parts[1]}</span>
-    </>
+      <span className="text-lg font-bold" style={{ color: "#e7010f" }}>
+        {`R$ ${intPart}`}
+        {decimal !== "00" && `,${decimal}`}
+      </span>
   );
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = false }) => {
-  // Renderiza a área da imagem
-  console.log("Dentro do ProductCard, recebendo o grupo:", group);
+  const imageHeight = 'h-[110px]';
+
+  const PriceTag = ({ children }: { children: React.ReactNode }) => (
+    <div
+      className="flex items-center justify-center bg-yellow-400 text-black text-center rounded-md mt-2"
+      style={{ height: '40px', minHeight: '40px', maxHeight: '40px', fontWeight: 700 }}
+    >
+      {children}
+    </div>
+  );
 
   const ImageSection = () => (
-    <div className="w-full h-32 mb-2 flex items-center justify-center overflow-hidden">
+    <div className={`w-full ${imageHeight} flex items-center justify-center`}>
       {group.image ? (
         <img 
           src={group.image.startsWith('/') ? group.image.slice(1) : group.image}
           alt={group.title || group.products[0]?.description || 'Imagem do produto'} 
-          className="max-w-full max-h-full object-contain"
+          className="h-full w-auto object-contain"
         />
       ) : (
         <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -42,7 +50,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
   const TitleSection = () => {
     const title = group.groupType === 'single' ? group.products[0]?.description : group.title;
     return (
-      <h3 className="text-sm font-semibold text-gray-800 text-center leading-tight mb-2 flex-grow line-clamp-3">
+      <h3 className="text-xs font-semibold text-gray-800 text-center leading-tight mb-2">
         {title}
       </h3>
     );
@@ -51,20 +59,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
   const renderSingleProduct = (product: Product) => (
     <>
       <ImageSection />
-      <div className="flex flex-col flex-grow justify-end">
+      <div className="flex-1 flex flex-col">
         <TitleSection />
         <p className="text-xs font-bold text-gray-600 text-center mb-2">Cód. {product.code}</p>
-        <div className="bg-yellow-400 text-black text-center py-1 rounded-md">
-          {formatPrice(product.price)}
-        </div>
       </div>
+      <PriceTag>{formatPrice(product.price)}</PriceTag>
     </>
   );
 
   const renderSamePriceGroup = () => (
     <>
       <ImageSection />
-      <div className="flex flex-col flex-grow justify-end">
+      <div className="flex-1 flex flex-col">
         <TitleSection />
         <div className="text-center space-y-1 mb-2">
           {group.products.slice(0, 3).map(p => (
@@ -73,18 +79,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
             </div>
           ))}
         </div>
-        <div className="bg-yellow-400 text-black text-center py-1 rounded-md mt-auto">
-          {formatPrice(group.products[0].price)}
-        </div>
       </div>
+      <PriceTag>{formatPrice(group.products[0].price)}</PriceTag>
     </>
   );
   
   const renderDifferentPriceGroup = () => (
     <>
       <ImageSection />
-      <div className="flex flex-col flex-grow justify-end">
-        <TitleSection />
+      <div className="flex-1 flex flex-col">
         <div className="space-y-1.5 mb-2">
           {group.products.slice(0, 3).map(p => (
             <div key={p.id} className="flex justify-between items-center text-xs border-b border-gray-100 last:border-b-0 pb-1">
@@ -95,6 +98,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
             </div>
           ))}
         </div>
+        <TitleSection />
       </div>
     </>
   );
@@ -115,7 +119,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
   };
 
   return (
-    <div className="bg-white rounded-lg border-2 border-gray-100 p-2 h-full w-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-white border-2 border-gray-100 w-full h-full flex flex-col p-2 shadow-sm rounded-lg">
       {renderContent()}
     </div>
   );
