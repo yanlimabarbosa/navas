@@ -25,7 +25,7 @@ import {
 import { PDFGenerator } from './utils/pdfGenerator';
 import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
 import { FlyerConfig, ProductGroup, Product } from './types';
-import { exportFlyerAsHTML } from './utils/htmlExporter';
+import { exportFlyerAsHTML, exportFlyerHTMLAsImage, exportFlyerHTMLAsPDF } from './utils/htmlExporter';
 
 function App() {
   const { toast } = useToast();
@@ -442,7 +442,22 @@ function App() {
                         <Button
                           onClick={async () => {
                             if (flyerRef.current && view.config) {
-                              await exportFlyerAsHTML(flyerRef.current, (view.config.title || 'encarte') + '.html');
+                              setIsExporting(true);
+                              try {
+                                const base = (view.config.title || 'encarte');
+                                const html = await exportFlyerAsHTML(flyerRef.current, base + '.html');
+                                await exportFlyerHTMLAsImage(flyerRef.current, base + '.jpg', html);
+                                await exportFlyerHTMLAsPDF(flyerRef.current, base + '.pdf', html);
+                              } catch (err) {
+                                console.error('Erro ao exportar HTML + Imagem + PDF:', err);
+                                toast({
+                                  title: 'Erro',
+                                  description: 'Erro ao exportar. Veja o console para detalhes.',
+                                  variant: 'destructive',
+                                });
+                              } finally {
+                                setIsExporting(false);
+                              }
                             }
                           }}
                           disabled={isExporting}
@@ -451,7 +466,7 @@ function App() {
                           className="flex items-center space-x-2"
                         >
                           <Download className="h-4 w-4" />
-                          <span>Exportar HTML</span>
+                          <span>Exportar HTML + Imagem + PDF</span>
                         </Button>
                       </div>
                     </div>

@@ -90,11 +90,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group, isPreview = fal
       <div className="flex-1 flex flex-col">
         <div className="space-y-1.5 mb-2">
           {group.products.slice(0, 3).map(p => (
-            <div key={p.id} className="flex justify-between items-center text-xs border-b border-gray-100 last:border-b-0 pb-1">
-              <span className="font-semibold text-gray-700">{p.specifications}</span>
-              <span className="bg-gray-200 px-2 py-0.5 rounded-full text-black font-bold whitespace-nowrap">
+            <div key={p.id} className="flex flex-col justify-between items-center text-xs border-b border-gray-100 last:border-b-0 pb-1">
+              <div className="font-semibold text-gray-700">{p.specifications}</div>
+              <div className="bg-gray-200 px-2 py-0.5 rounded-full text-black font-bold whitespace-nowrap">
                 R$ {p.price.toFixed(2).replace('.', ',')}
-              </span>
+              </div>
             </div>
           ))}
         </div>
