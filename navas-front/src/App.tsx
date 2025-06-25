@@ -1,355 +1,480 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { FileText, Download, Image, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { FileUploader } from './components/FileUploader';
-import { ProductCard } from './components/ProductCard';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
-import { ProductEditor } from './components/ProductEditor';
 import { ConfigPanel } from './components/ConfigPanel';
-import { ProjectManager } from './components/ProjectManager';
+import { ThemeProvider } from './components/theme-provider';
+import { ThemeToggle } from './components/theme-toggle';
+import { Button } from './components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { Toaster } from './components/ui/toaster';
+import { useToast } from './hooks/use-toast';
+import { 
+  Download, 
+  FileSpreadsheet, 
+  Save, 
+  Upload, 
+  Settings, 
+  Eye,
+  ArrowLeft,
+  Plus,
+  Trash2
+} from 'lucide-react';
 import { PDFGenerator } from './utils/pdfGenerator';
-import { Product, ProductGroup, FlyerConfig, SavedProject } from './types';
+import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
+import { FlyerConfig, ProductGroup, Product } from './types';
 
 function App() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [groups, setGroups] = useState<ProductGroup[]>([]);
-  const [config, setConfig] = useState<FlyerConfig>({
-    id: 'flyer-1',
-    title: 'Encarte Promocional',
-    headerText: 'Ofertas válidas até 31/01/2025',
-    footerText: 'Consulte condições especiais em nossa loja',
-    backgroundColor: '#ffffff',
-    primaryColor: '#dc2626',
-    secondaryColor: '#1e40af',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
-  
-  const [currentStep, setCurrentStep] = useState<'upload' | 'design' | 'preview'>('upload');
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingPosition, setEditingPosition] = useState<number>(0);
-  const [editingGroup, setEditingGroup] = useState<ProductGroup | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [view, setView] = useState<{
+    state: 'dashboard' | 'upload' | 'preview';
+    config?: FlyerConfig;
+    groups?: ProductGroup[];
+    products?: Product[];
+  }>({ state: 'dashboard' });
+
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  
   const flyerRef = useRef<HTMLDivElement>(null);
 
-  const handleProductsLoaded = useCallback((loadedProducts: Product[]) => {
-    setProducts(loadedProducts);
-    setSuccess(`${loadedProducts.length} produtos carregados com sucesso!`);
-    setError('');
-    setCurrentStep('design');
-    
-    // Auto-generate some groups for demonstration
-    const autoGroups: ProductGroup[] = loadedProducts.slice(0, 12).map((product, index) => ({
-      id: `auto-group-${index}`,
-      type: 'single',
-      products: [product],
-      position: index
+  // Queries
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+    staleTime: 0, // Immediate refetch when invalidated
+  });
+
+  // Mutations
+  const saveMutation = useMutation({
+    mutationFn: (projectData: any) => {
+      if (currentProjectId) {
+        return updateProject(currentProjectId, projectData);
+      }
+      return saveProject(projectData);
+    },
+    onSuccess: (data) => {
+      if (!currentProjectId) {
+        setCurrentProjectId(data.id);
+      }
+      toast({
+        title: "Sucesso!",
+        description: "Projeto salvo com sucesso!",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao salvar projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar projeto. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      setCurrentProjectId(null);
+      setView({ state: 'dashboard' });
+      toast({
+        title: "Sucesso!",
+        description: "Projeto excluído com sucesso!",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir projeto. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const groups = await processExcelFile(file);
+      const products = groups.flatMap(group => group.products);
+      
+      setView({
+        state: 'preview',
+        config: {
+          id: 'config-1',
+          title: 'Encarte de Ofertas',
+          headerText: 'Ofertas Válidas até 31/12/2024 ou enquanto durarem os estoques.',
+          footerText: 'Imagens meramente ilustrativas. Preços válidos para todas as lojas da rede.',
+          backgroundColor: '#FFFFFF',
+          primaryColor: '#d91e2b',
+          secondaryColor: '#2b3990',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          headerImageUrl: '',
+          footerImageUrl: '',
+        },
+        groups,
+        products,
+      });
+    } catch (error) {
+      console.error('Erro ao processar arquivo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar arquivo. Verifique se o formato está correto.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleConfigChange = useCallback((newConfig: FlyerConfig) => {
+    setView(prev => ({
+      ...prev,
+      config: newConfig,
     }));
-    
-    setGroups(autoGroups);
   }, []);
 
-  const handleError = useCallback((errorMessage: string) => {
-    setError(errorMessage);
-    setSuccess('');
-  }, []);
-
-  const handleSuccess = useCallback((successMessage: string) => {
-    setSuccess(successMessage);
-    setError('');
-  }, []);
-
-  const handleEditGroup = (position: number) => {
-    const existingGroup = groups.find(g => g.position === position);
-    setEditingGroup(existingGroup || null);
-    setEditingPosition(position);
-    setIsEditorOpen(true);
+  const handleLoadProject = async (projectId: string) => {
+    try {
+      const project = await getProjectById(projectId);
+      setCurrentProjectId(project.id);
+      
+      setView({
+        state: 'preview',
+        config: {
+          ...project.config,
+          createdAt: new Date(project.config.createdAt || new Date()),
+          updatedAt: new Date(project.config.updatedAt || new Date())
+        },
+        groups: project.groups,
+        products: project.groups.flatMap(group => group.products),
+      });
+    } catch (error) {
+      console.error('Erro ao carregar projeto:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar projeto. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveGroup = (group: ProductGroup) => {
-    setGroups(prev => {
-      const filtered = prev.filter(g => g.position !== group.position);
-      return [...filtered, group];
-    });
-    setSuccess('Quadrante salvo com sucesso!');
-    setError('');
+  const handleSaveProject = () => {
+    if (!view.config || !view.groups) {
+      toast({
+        title: "Aviso",
+        description: "Nenhum projeto para salvar",
+        variant: "default",
+      });
+      return;
+    }
+
+    const projectData = {
+      name: view.config.title,
+      config: view.config,
+      groups: view.groups,
+      products: view.products || [],
+    };
+
+    saveMutation.mutate(projectData);
   };
 
-  const handleLoadProject = (project: SavedProject) => {
-    setConfig(project.config);
-    setGroups(project.groups);
-    setProducts(project.products);
-    setCurrentStep('design');
+  const handleDeleteProject = () => {
+    if (!currentProjectId) {
+      toast({
+        title: "Aviso",
+        description: "Nenhum projeto para excluir",
+        variant: "default",
+      });
+      return;
+    }
+
+    if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
+      deleteMutation.mutate(currentProjectId);
+    }
   };
 
-  const handleExportPDF = async () => {
-    if (!flyerRef.current) return;
+  const handleExport = async (format: 'jpg' | 'pdf') => {
+    if (!flyerRef.current) {
+      console.error("Referência do Flyer não encontrada.");
+      return;
+    }
     
     setIsExporting(true);
+
     try {
-      await PDFGenerator.generateFromElement(flyerRef.current, config.title);
-      setSuccess('PDF gerado com sucesso!');
+      // Usa document.fonts.ready para garantir que todas as fontes foram carregadas
+      await document.fonts.ready;
+
+      // Adiciona um pequeno delay adicional para garantir a renderização final
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const element = flyerRef.current;
+      const fileName = view.state === 'preview' ? view.config?.title.replace(/ /g, '_') : 'encarte';
+      
+      if (format === 'pdf') {
+        await PDFGenerator.generateFromElement(element, fileName);
+      } else {
+        // Use the new method for JPEG export that creates a dedicated export element
+        if (view.config && view.groups) {
+          await PDFGenerator.generateJPGFromConfig(view.config, view.groups, fileName);
+        } else {
+          // Fallback to the old method if config/groups are not available
+          await PDFGenerator.generateJPG(element, fileName);
+        }
+      }
+      
+      toast({
+        title: "Sucesso!",
+        description: `Encarte exportado como ${format.toUpperCase()} com sucesso!`,
+        variant: "success",
+      });
     } catch (error) {
-      setError('Erro ao gerar PDF');
+      console.error(`Erro ao exportar para ${format.toUpperCase()}:`, error);
+      toast({
+        title: "Erro",
+        description: `Houve um erro ao tentar exportar para ${format.toUpperCase()}.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
     }
-    setIsExporting(false);
   };
 
-  const handleExportJPG = async () => {
-    if (!flyerRef.current) return;
-    
-    setIsExporting(true);
-    try {
-      await PDFGenerator.generateJPG(flyerRef.current, config.title);
-      setSuccess('JPG gerado com sucesso!');
-    } catch (error) {
-      setError('Erro ao gerar JPG');
-    }
-    setIsExporting(false);
-  };
-
-  const renderStepIndicator = () => (
-    <div className="bg-white rounded-lg shadow-lg p-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className={`flex items-center space-x-2 ${currentStep === 'upload' ? 'text-blue-600' : 'text-green-600'}`}>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            currentStep === 'upload' ? 'bg-blue-100' : 'bg-green-100'
-          }`}>
-            {currentStep === 'upload' ? '1' : <CheckCircle className="w-5 h-5" />}
-          </div>
-          <span className="font-medium">Upload da Planilha</span>
-        </div>
-        
-        <div className={`w-16 h-1 rounded ${
-          currentStep !== 'upload' ? 'bg-green-500' : 'bg-gray-200'
-        }`} />
-        
-        <div className={`flex items-center space-x-2 ${
-          currentStep === 'design' ? 'text-blue-600' : 
-          currentStep === 'preview' ? 'text-green-600' : 'text-gray-400'
-        }`}>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            currentStep === 'design' ? 'bg-blue-100' : 
-            currentStep === 'preview' ? 'bg-green-100' : 'bg-gray-100'
-          }`}>
-            {currentStep === 'preview' ? <CheckCircle className="w-5 h-5" /> : '2'}
-          </div>
-          <span className="font-medium">Design do Encarte</span>
-        </div>
-        
-        <div className={`w-16 h-1 rounded ${
-          currentStep === 'preview' ? 'bg-green-500' : 'bg-gray-200'
-        }`} />
-        
-        <div className={`flex items-center space-x-2 ${
-          currentStep === 'preview' ? 'text-blue-600' : 'text-gray-400'
-        }`}>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            currentStep === 'preview' ? 'bg-blue-100' : 'bg-gray-100'
-          }`}>
-            3
-          </div>
-          <span className="font-medium">Preview & Export</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderNotifications = () => (
-    <div className="space-y-2 mb-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-      {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3">
-          <CheckCircle className="w-5 h-5 text-green-500" />
-          <p className="text-green-700">{success}</p>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-red-700 rounded-lg flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900">Sistema de Promoções NAVAS</h1>
-          </div>
-          <p className="text-xl text-gray-600">
-            Crie encartes promocionais profissionais automaticamente
-          </p>
-        </div>
-
-        {renderStepIndicator()}
-        {renderNotifications()}
-
-        {/* Upload Step */}
-        {currentStep === 'upload' && (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Upload da Planilha de Produtos
-                </h2>
-                <ProjectManager
-                  currentConfig={config}
-                  currentGroups={groups}
-                  currentProducts={products}
-                  onLoadProject={handleLoadProject}
-                  onSaveSuccess={handleSuccess}
-                  onError={handleError}
-                />
+  // Render Logic
+  const renderContent = () => {
+    switch (view.state) {
+      case 'dashboard':
+        return (
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-4xl font-bold text-foreground">Meus Encartes</h1>
+                <p className="text-muted-foreground mt-2">Gerencie seus projetos de encartes promocionais</p>
               </div>
-              <FileUploader 
-                onProductsLoaded={handleProductsLoaded}
-                onError={handleError}
-              />
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">Formato da Planilha:</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Coluna A: Código do Produto</li>
-                  <li>• Coluna B: Descrição do Produto</li>
-                  <li>• Coluna C: Preço (formato numérico)</li>
-                  <li>• Primeira linha pode ser cabeçalho (será ignorada)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Design Step */}
-        {currentStep === 'design' && (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* Configuration Panel */}
-            <div className="xl:col-span-1">
-              <ConfigPanel config={config} onConfigChange={setConfig} />
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={() => setCurrentStep('preview')}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  Visualizar Encarte
-                </button>
-                <ProjectManager
-                  currentConfig={config}
-                  currentGroups={groups}
-                  currentProducts={products}
-                  onLoadProject={handleLoadProject}
-                  onSaveSuccess={handleSuccess}
-                  onError={handleError}
-                />
+              <div className="flex items-center space-x-2">
+                <ThemeToggle />
               </div>
             </div>
 
-            {/* Product Grid */}
-            <div className="xl:col-span-3">
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Design do Encarte (12 Quadrantes)
-                </h2>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {Array.from({ length: 12 }, (_, index) => {
-                    const group = groups.find(g => g.position === index);
-                    return (
-                      <div key={index} className="aspect-square">
-                        {group ? (
-                          <ProductCard 
-                            group={group} 
-                            onEdit={() => handleEditGroup(index)}
-                          />
-                        ) : (
-                          <div 
-                            className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                            onClick={() => handleEditGroup(index)}
-                          >
-                            <div className="text-center">
-                              <div className="text-2xl text-gray-400 mb-2">+</div>
-                              <span className="text-sm text-gray-500">
-                                Quadrante {index + 1}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setView({ state: 'upload' })}>
+                <CardHeader>
+                  <div className="flex items-center space-x-2">
+                    <Plus className="h-5 w-5 text-primary" />
+                    <CardTitle>Criar Novo Encarte</CardTitle>
+                  </div>
+                  <CardDescription>Comece um novo projeto a partir de uma planilha Excel</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>Upload de Excel</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {isLoadingProjects && (
+                <Card>
+                  <CardContent className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {projects?.map(project => (
+                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleLoadProject(project.id)}>
+                  <CardHeader>
+                    <CardTitle className="line-clamp-1">{project.name}</CardTitle>
+                    <CardDescription>
+                      Atualizado em: {new Date(project.updatedAt).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Eye className="h-4 w-4" />
+                      <span>Clique para abrir</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'upload':
+        return (
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center space-x-4 mb-8">
+                <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Criar Novo Encarte</h1>
+                  <p className="text-muted-foreground">Selecione uma planilha Excel para começar</p>
                 </div>
               </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Upload className="h-5 w-5" />
+                    <span>Upload da Planilha</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Arraste um arquivo Excel aqui ou clique para selecionar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <input 
+                    type="file" 
+                    accept=".xlsx,.xls" 
+                    onChange={handleFileChange}
+                    className="w-full p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
+                  />
+                </CardContent>
+              </Card>
             </div>
           </div>
-        )}
+        );
 
-        {/* Preview Step */}
-        {currentStep === 'preview' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Preview do Encarte</h2>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setCurrentStep('design')}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+      case 'preview':
+        return (
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">Editor de Encarte</h1>
+                  <p className="text-muted-foreground">Personalize e exporte seu encarte promocional</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={handleSaveProject}
+                  disabled={saveMutation.isPending}
+                  variant="outline"
+                  className="flex items-center space-x-2"
                 >
-                  Voltar ao Design
-                </button>
-                <ProjectManager
-                  currentConfig={config}
-                  currentGroups={groups}
-                  currentProducts={products}
-                  onLoadProject={handleLoadProject}
-                  onSaveSuccess={handleSuccess}
-                  onError={handleError}
-                />
-                <button
-                  onClick={handleExportJPG}
-                  disabled={isExporting}
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
-                >
-                  {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
-                  <span>Exportar JPG</span>
-                </button>
-                <button
-                  onClick={handleExportPDF}
-                  disabled={isExporting}
-                  className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center space-x-2"
-                >
-                  {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  <span>Exportar PDF</span>
-                </button>
+                  <Save className="h-4 w-4" />
+                  <span>{saveMutation.isPending ? 'Salvando...' : (currentProjectId ? 'Atualizar' : 'Salvar')}</span>
+                </Button>
+                {currentProjectId && (
+                  <Button
+                    onClick={handleDeleteProject}
+                    disabled={deleteMutation.isPending}
+                    variant="destructive"
+                    size="icon"
+                    title="Excluir Projeto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+                <ThemeToggle />
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <FlyerPreview 
-                ref={flyerRef}
-                groups={groups} 
-                config={config}
-                className="transform scale-75 origin-top"
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="h-5 w-5" />
+                      <span>Configurações</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Personalize o título, cores e textos do seu encarte
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <ConfigPanel config={view.config!} onConfigChange={handleConfigChange} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Eye className="h-5 w-5" />
+                        <CardTitle>Visualização</CardTitle>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => handleExport('pdf')}
+                          disabled={isExporting}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>{isExporting ? 'Exportando...' : 'PDF'}</span>
+                        </Button>
+                        <Button
+                          onClick={() => handleExport('jpg')}
+                          disabled={isExporting}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>{isExporting ? 'Exportando...' : 'JPG'}</span>
+                        </Button>
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Preview do seu encarte promocional
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex items-center justify-center overflow-auto">
+                      <FlyerPreview
+                        ref={flyerRef}
+                        config={view.config!}
+                        groups={view.groups!}
+                      />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
-        )}
+        );
 
-        {/* Product Editor Modal */}
-        <ProductEditor
-          isOpen={isEditorOpen}
-          onClose={() => setIsEditorOpen(false)}
-          products={products}
-          group={editingGroup}
-          onSave={handleSaveGroup}
-          position={editingPosition}
-        />
-      </div>
-    </div>
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        defaultTheme="light"
+        storageKey="navas-theme"
+      >
+        <div className="min-h-screen bg-background text-foreground">
+          {renderContent()}
+        </div>
+        <Toaster />
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

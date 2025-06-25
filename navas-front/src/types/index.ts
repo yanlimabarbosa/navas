@@ -1,19 +1,20 @@
 export interface Product {
   id: string;
   code: string;
-  description: string;
+  description?: string;
   price: number;
   category?: string;
   specifications?: string;
 }
 
-export interface ProductGroup {
+export type ProductGroup = {
   id: string;
-  type: 'single' | 'same-price' | 'different-price';
-  title?: string;
+  title: string;
+  image?: string;
   products: Product[];
+  groupType: 'single' | 'same-price' | 'different-price';
   position: number;
-}
+};
 
 export interface FlyerConfig {
   id: string;
@@ -40,9 +41,12 @@ export interface SavedProject {
 }
 
 export interface ExcelData {
-  code: string;
-  produto: string;
-  preco: number;
+  Posicao: number;
+  Codigo: string;
+  Descricao: string;
+  Diferencial?: string;
+  Preco: number;
+  Imagem: string;
 }
 
 export interface ImageDimensions {
@@ -59,3 +63,14 @@ export const FOOTER_DIMENSIONS: ImageDimensions = {
   width: 1240,
   height: 204
 };
+
+// Electron API types
+declare global {
+  interface Window {
+    electronAPI?: {
+      getBackendUrl: () => Promise<string>;
+    };
+  }
+}
+
+export {};

@@ -4,16 +4,16 @@ import { ImageProcessor } from '../utils/imageProcessor';
 
 interface ImageUploaderProps {
   label: string;
-  currentImageUrl?: string;
-  expectedDimensions: { width: number; height: number };
+  currentImage?: string;
+  targetDimensions: { width: number; height: number };
   onImageChange: (imageUrl: string | undefined) => void;
   className?: string;
 }
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   label,
-  currentImageUrl,
-  expectedDimensions,
+  currentImage,
+  targetDimensions,
   onImageChange,
   className = ''
 }) => {
@@ -27,7 +27,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setSuccess('');
 
     try {
-      const processedImageUrl = await ImageProcessor.processImageFile(file, expectedDimensions);
+      const processedImageUrl = await ImageProcessor.processImageFile(file, targetDimensions);
       onImageChange(processedImageUrl);
       setSuccess('Imagem processada com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
@@ -37,7 +37,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     } finally {
       setIsProcessing(false);
     }
-  }, [expectedDimensions, onImageChange]);
+  }, [targetDimensions, onImageChange]);
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -62,33 +62,29 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-      
-      <div className="text-xs text-gray-500 mb-2">
-        Dimensões recomendadas: {expectedDimensions.width}x{expectedDimensions.height} pixels
+      <div className="text-xs text-muted-foreground">
+        Dimensões recomendadas: {targetDimensions.width}x{targetDimensions.height} pixels
       </div>
 
-      {currentImageUrl ? (
+      {currentImage ? (
         <div className="relative">
-          <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+          <div className="border-2 border-border rounded-lg overflow-hidden">
             <img
-              src={currentImageUrl}
+              src={currentImage}
               alt={label}
               className="w-full h-24 object-cover"
             />
           </div>
           <button
             onClick={handleRemoveImage}
-            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+            className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       ) : (
         <div
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer"
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
         >
@@ -108,17 +104,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             <div className="flex flex-col items-center space-y-2">
               {isProcessing ? (
                 <div className="animate-spin">
-                  <Upload className="w-6 h-6 text-blue-600" />
+                  <Upload className="w-6 h-6 text-primary" />
                 </div>
               ) : (
-                <ImageIcon className="w-6 h-6 text-gray-400" />
+                <ImageIcon className="w-6 h-6 text-muted-foreground" />
               )}
               
               <div>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-foreground">
                   {isProcessing ? 'Processando...' : 'Clique ou arraste uma imagem'}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   JPG ou PNG
                 </p>
               </div>
@@ -128,7 +124,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       )}
 
       {error && (
-        <div className="flex items-center space-x-2 text-red-600 text-sm">
+        <div className="flex items-center space-x-2 text-destructive text-sm">
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
         </div>

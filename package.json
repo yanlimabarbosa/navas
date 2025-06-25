@@ -1,0 +1,65 @@
+{
+  "name": "navas-electron-app",
+  "version": "1.0.0",
+  "description": "Navas Promoções Desktop Application",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on http://localhost:8080 && electron .\"",
+    "dev:frontend": "cd navas-front && npm run dev",
+    "dev:backend": "cd navas-backend && ./mvnw spring-boot:run",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd navas-front && npm run build",
+    "build:backend": "cd navas-backend && (mvnw.cmd clean package -DskipTests || ./mvnw clean package -DskipTests)",
+    "dist": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": ["electron", "desktop", "navas", "promocoes"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.navas.promocoes",
+    "productName": "Navas Promoções",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "navas-front/dist/**/*",
+      "navas-backend/target/*.jar",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "navas-front/dist",
+        "to": "navas-front/dist"
+      },
+      {
+        "from": "navas-backend/target",
+        "to": "backend",
+        "filter": ["*.jar"]
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "sign": false,
+      "signAndEditExecutable": false,
+      "certificateFile": null,
+      "certificatePassword": null
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+} 
