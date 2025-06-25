@@ -25,6 +25,7 @@ import {
 import { PDFGenerator } from './utils/pdfGenerator';
 import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
 import { FlyerConfig, ProductGroup, Product } from './types';
+import { exportFlyerAsHTML } from './utils/htmlExporter';
 
 function App() {
   const { toast } = useToast();
@@ -437,6 +438,20 @@ function App() {
                         >
                           <Download className="h-4 w-4" />
                           <span>{isExporting ? 'Exportando...' : 'JPG'}</span>
+                        </Button>
+                        <Button
+                          onClick={async () => {
+                            if (flyerRef.current && view.config) {
+                              await exportFlyerAsHTML(flyerRef.current, (view.config.title || 'encarte') + '.html');
+                            }
+                          }}
+                          disabled={isExporting}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>Exportar HTML</span>
                         </Button>
                       </div>
                     </div>
