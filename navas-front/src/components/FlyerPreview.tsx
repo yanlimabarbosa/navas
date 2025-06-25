@@ -12,16 +12,21 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
   ({ groups, config, className = '' }, ref) => {
     const groupsByPosition = new Map(groups.map(group => [group.position, group]));
     const gridSlots = Array.from({ length: 12 }, (_, index) => index + 1);
+    const isExportMode = className.includes('export-mode');
 
     return (
       <div
         ref={ref}
         className={`bg-white shadow-xl rounded-lg overflow-hidden flex flex-col ${className}`}
         style={{
-          width: '100%',
-          height: 'auto',
-          maxWidth: '100%',
-          maxHeight: 'none',
+          width: isExportMode ? '794px' : '100%',
+          height: isExportMode ? '1123px' : 'auto',
+          maxWidth: isExportMode ? '794px' : '100%',
+          maxHeight: isExportMode ? '1123px' : 'none',
+          boxSizing: 'border-box',
+          background: '#fff',
+          fontFamily: "'Inter', Arial, sans-serif",
+          fontSize: '16px',
         }}
       >
         {/* Header */}
@@ -64,8 +69,8 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         </div>
 
         {/* Product Grid */}
-        <div className="p-4 flex-grow flex flex-col">
-          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-[800px]" style={{ height: '800px' }}>
+        <div className={`p-4 flex-1 flex flex-col${isExportMode ? '' : ''}`} style={isExportMode ? { minHeight: 0 } : {}}>
+          <div className="grid grid-cols-4 grid-rows-3 gap-2 h-full" style={{ height: '100%' }}>
             {gridSlots.map((position) => {
               const groupForPosition = groupsByPosition.get(position);
               return (
