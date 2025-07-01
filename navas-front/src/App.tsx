@@ -356,8 +356,8 @@ function App() {
 
       case 'preview':
         return (
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between mb-8">
+          <div className="w-full min-h-screen px-4 py-8 overflow-x-auto bg-background">
+            <div className="flex items-center justify-between mb-8 max-w-[1640px] mx-auto">
               <div className="flex items-center space-x-4">
                 <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
                   <ArrowLeft className="h-4 w-4" />
@@ -392,8 +392,9 @@ function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
-              <div className="lg:col-span-1">
+            <div className="flex gap-8 max-w-[1640px] mx-auto">
+              {/* Config Panel */}
+              <div style={{ width: '360px', minWidth: '360px' }}>
                 <Card className="h-full">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -409,8 +410,8 @@ function App() {
                   </CardContent>
                 </Card>
               </div>
-
-              <div className="lg:col-span-2">
+              {/* Preview Panel */}
+              <div style={{ width: '1240px', minWidth: '1240px', maxWidth: '1240px' }}>
                 <Card className="h-full flex flex-col">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -474,7 +475,7 @@ function App() {
                       Preview do seu encarte promocional
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex-1 flex items-center justify-center overflow-auto">
+                  <CardContent className="flex-1 flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
                       <FlyerPreview
                         ref={flyerRef}
                         config={view.config!}

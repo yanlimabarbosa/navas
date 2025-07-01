@@ -158,7 +158,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
               label="Imagem do Cabeçalho"
               currentImage={config.headerImageUrl}
               onImageChange={(url) => handleImageChange('headerImageUrl', url)}
-              targetDimensions={{ width: 800, height: 200 }}
+              targetDimensions={{ width: 1240, height: 474 }}
             />
           </div>
 
@@ -168,7 +168,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
               label="Imagem do Rodapé"
               currentImage={config.footerImageUrl}
               onImageChange={(url) => handleImageChange('footerImageUrl', url)}
-              targetDimensions={{ width: 800, height: 150 }}
+              targetDimensions={{ width: 1240, height: 204 }}
             />
           </div>
         </div>
