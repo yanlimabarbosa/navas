@@ -100,7 +100,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             src={group.image}
             alt={group.title || product.description || "Imagem do produto"}
           />
-          <div className="absolute bottom-2 right-2 bg-black text-white text-[11px] px-2 py-0.5 rounded-full font-semibold shadow">
+          <div className="absolute bottom-2 right-2 bg-black text-white text-[11px] px-2 py-0.5 rounded-md font-semibold shadow">
             Cód. {product.code}
           </div>
         </div>
@@ -142,17 +142,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
         <div className="flex flex-col items-end w-full px-2 pb-2">
           {group.products.map((p) => (
-            <div key={p.id} className="mb-1 last:mb-0 w-full flex justify-end">
-              <div className="flex items-center bg-black pl-2 pr-2 rounded-full h-[24px] max-w-full ml-auto">
-                <span className="text-[#bdbdbd] text-[13px] font-semibold truncate mr-2 text-right">
-                  {p.specifications}
-                </span>
-                <span className="text-white text-[13px] font-bold min-w-[44px] text-right">
-                  {p.code}
-                </span>
-              </div>
-            </div>
-          ))}
+  <div key={p.id} className="mb-1 last:mb-0 w-full flex justify-end">
+    <div className="flex items-center bg-black pl-2 pr-2 rounded-md h-[24px] w-[110px] ml-auto justify-center">
+      <span className="text-white text-[13px] font-bold truncate text-center">
+        {p.code} - {p.specifications}
+      </span>
+    </div>
+  </div>
+))}
+
         </div>
 
         <div className="w-full flex items-center justify-center px-2 mt-1 mb-1">
@@ -185,10 +183,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           }
         />
       </div>
-      <div className="w-full flex items-center justify-center mt-1 mb-1">
+      <div className="w-full flex items-center justify-center mt-1 mb-5">
         <h3 className={productTitleClass}>{group.title}</h3>
       </div>
-      <div className="flex flex-col gap-1 w-full px-2 pb-2">
+      <div className="flex flex-col gap-[1px] w-full px-2 pb-2">
         {group.products.slice(0, 3).map((p) => (
           <ProductSpecsRow key={p.id} product={p} />
         ))}
