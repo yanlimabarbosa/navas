@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlyerConfig } from '../types';
-import { Type, Image as ImageIcon, Palette, Settings } from 'lucide-react';
+import { Type, Image as ImageIcon, Palette } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
@@ -30,14 +30,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
+    <div className="space-y-4">
+      {/* Basic Information Section */}
+      <div className="space-y-3">
         <div className="flex items-center space-x-2">
-          <Type className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold">Informações Básicas</h3>
+          <Type className="w-4 h-4 text-primary" />
+          <h3 className="text-base font-semibold">Informações Básicas</h3>
         </div>
         
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="title">Título do Encarte</Label>
             <Input
@@ -75,14 +76,46 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
       <Separator />
 
-      {/* Color Configuration */}
-      <div className="space-y-4">
+      {/* Images Section - Second Row */}
+      <div className="space-y-3">
         <div className="flex items-center space-x-2">
-          <Palette className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold">Cores</h3>
+          <ImageIcon className="w-4 h-4 text-primary" />
+          <h3 className="text-base font-semibold">Imagens</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <Label>Imagem do Cabeçalho</Label>
+            <ImageUploader
+              label="Imagem do Cabeçalho"
+              currentImage={config.headerImageUrl}
+              onImageChange={(url) => handleImageChange('headerImageUrl', url)}
+              targetDimensions={{ width: 1240, height: 474 }}
+            />
+          </div>
+
+          <div>
+            <Label>Imagem do Rodapé</Label>
+            <ImageUploader
+              label="Imagem do Rodapé"
+              currentImage={config.footerImageUrl}
+              onImageChange={(url) => handleImageChange('footerImageUrl', url)}
+              targetDimensions={{ width: 1240, height: 204 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Colors Section - Third Row */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <Palette className="w-4 h-4 text-primary" />
+          <h3 className="text-base font-semibold">Cores</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="primaryColor">Cor Primária</Label>
             <div className="flex space-x-2 mt-1">
@@ -119,57 +152,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
                 placeholder="#2b3990"
               />
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="backgroundColor">Cor de Fundo</Label>
-            <div className="flex space-x-2 mt-1">
-              <Input
-                id="backgroundColor"
-                type="color"
-                value={config.backgroundColor}
-                onChange={(e) => handleChange('backgroundColor', e.target.value)}
-                className="w-12 h-10 p-1"
-              />
-              <Input
-                type="text"
-                value={config.backgroundColor}
-                onChange={(e) => handleChange('backgroundColor', e.target.value)}
-                placeholder="#FFFFFF"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Image Upload Section */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <ImageIcon className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold">Imagens</h3>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <Label>Imagem do Cabeçalho</Label>
-            <ImageUploader
-              label="Imagem do Cabeçalho"
-              currentImage={config.headerImageUrl}
-              onImageChange={(url) => handleImageChange('headerImageUrl', url)}
-              targetDimensions={{ width: 1240, height: 474 }}
-            />
-          </div>
-
-          <div>
-            <Label>Imagem do Rodapé</Label>
-            <ImageUploader
-              label="Imagem do Rodapé"
-              currentImage={config.footerImageUrl}
-              onImageChange={(url) => handleImageChange('footerImageUrl', url)}
-              targetDimensions={{ width: 1240, height: 204 }}
-            />
           </div>
         </div>
       </div>

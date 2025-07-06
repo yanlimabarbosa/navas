@@ -22,10 +22,9 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { PDFGenerator } from './utils/pdfGenerator';
 import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
 import { FlyerConfig, ProductGroup, Product } from './types';
-import { exportFlyerAsHTML, exportFlyerHTMLAsImage, exportFlyerHTMLAsPDF } from './utils/htmlExporter';
+import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
 
 function App() {
   const { toast } = useToast();
@@ -38,7 +37,7 @@ function App() {
   }>({ state: 'dashboard' });
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
   const flyerRef = useRef<HTMLDivElement>(null);
 
   // Queries
@@ -50,7 +49,12 @@ function App() {
 
   // Mutations
   const saveMutation = useMutation({
-    mutationFn: (projectData: any) => {
+    mutationFn: (projectData: {
+      name: string;
+      config: FlyerConfig;
+      groups: ProductGroup[];
+      products: Product[];
+    }) => {
       if (currentProjectId) {
         return updateProject(currentProjectId, projectData);
       }
@@ -204,48 +208,42 @@ function App() {
 
   const handleExport = async (format: 'jpg' | 'pdf') => {
     if (!flyerRef.current) {
-      console.error("Referência do Flyer não encontrada.");
+      console.error("❌ Referência do Flyer não encontrada.");
       return;
     }
     
-    setIsExporting(true);
+    console.log('🚀 Starting export:', format.toUpperCase());
+    setIsExporting(prev => ({ ...prev, [format]: true }));
 
     try {
-      // Usa document.fonts.ready para garantir que todas as fontes foram carregadas
-      await document.fonts.ready;
-
-      // Adiciona um pequeno delay adicional para garantir a renderização final
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       const element = flyerRef.current;
       const fileName = view.state === 'preview' ? view.config?.title.replace(/ /g, '_') : 'encarte';
       
+      console.log('📋 Element to export:', element);
+      console.log('📁 Filename:', fileName);
+      
       if (format === 'pdf') {
-        await PDFGenerator.generateFromElement(element, fileName);
+        // 🎯 DIRECT CAPTURE - NO HTML GENERATION
+        await exportElementAsPDF(element, `${fileName}.pdf`);
       } else {
-        // Use the new method for JPEG export that creates a dedicated export element
-        if (view.config && view.groups) {
-          await PDFGenerator.generateJPGFromConfig(view.config, view.groups, fileName);
-        } else {
-          // Fallback to the old method if config/groups are not available
-          await PDFGenerator.generateJPG(element, fileName);
-        }
+        // 🎯 DIRECT CAPTURE - NO HTML GENERATION  
+        await exportElementAsImage(element, `${fileName}.jpg`);
       }
       
       toast({
-        title: "Sucesso!",
+        title: "✅ Sucesso!",
         description: `Encarte exportado como ${format.toUpperCase()} com sucesso!`,
         variant: "success",
       });
     } catch (error) {
-      console.error(`Erro ao exportar para ${format.toUpperCase()}:`, error);
+      console.error(`❌ Erro ao exportar para ${format.toUpperCase()}:`, error);
       toast({
-        title: "Erro",
+        title: "❌ Erro",
         description: `Houve um erro ao tentar exportar para ${format.toUpperCase()}.`,
         variant: "destructive",
       });
     } finally {
-      setIsExporting(false);
+      setIsExporting(prev => ({ ...prev, [format]: false }));
     }
   };
 
@@ -392,10 +390,10 @@ function App() {
               </div>
             </div>
 
-            <div className="flex gap-8 max-w-[1640px] mx-auto">
+            <div className="flex flex-col gap-8 max-w-[1640px] mx-auto">
               {/* Config Panel */}
-              <div style={{ width: '360px', minWidth: '360px' }}>
-                <Card className="h-full">
+              <div className="w-full flex justify-center">
+                <Card className="w-[1240px]">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Settings className="h-5 w-5" />
@@ -405,14 +403,14 @@ function App() {
                       Personalize o título, cores e textos do seu encarte
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex-1">
+                  <CardContent>
                     <ConfigPanel config={view.config!} onConfigChange={handleConfigChange} />
                   </CardContent>
                 </Card>
               </div>
               {/* Preview Panel */}
-              <div style={{ width: '1240px', minWidth: '1240px', maxWidth: '1240px' }}>
-                <Card className="h-full flex flex-col">
+              <div className="w-full flex justify-center">
+                <Card className="w-fit">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -422,28 +420,29 @@ function App() {
                       <div className="flex space-x-2">
                         <Button
                           onClick={() => handleExport('pdf')}
-                          disabled={isExporting}
+                          disabled={isExporting.pdf}
                           variant="outline"
                           size="sm"
                           className="flex items-center space-x-2"
                         >
                           <Download className="h-4 w-4" />
-                          <span>{isExporting ? 'Exportando...' : 'PDF'}</span>
+                          <span>{isExporting.pdf ? 'Exportando...' : 'PDF'}</span>
                         </Button>
                         <Button
                           onClick={() => handleExport('jpg')}
-                          disabled={isExporting}
+                          disabled={isExporting.jpg}
                           variant="outline"
                           size="sm"
                           className="flex items-center space-x-2"
                         >
                           <Download className="h-4 w-4" />
-                          <span>{isExporting ? 'Exportando...' : 'JPG'}</span>
+                          <span>{isExporting.jpg ? 'Exportando...' : 'JPG'}</span>
                         </Button>
+                        {/* HTML Export Button - Commented out per user request
                         <Button
                           onClick={async () => {
                             if (flyerRef.current && view.config) {
-                              setIsExporting(true);
+                              setIsExporting(prev => ({ ...prev, html: true }));
                               try {
                                 const base = (view.config.title || 'encarte');
                                 const html = await exportFlyerAsHTML(flyerRef.current, base + '.html');
@@ -457,11 +456,11 @@ function App() {
                                   variant: 'destructive',
                                 });
                               } finally {
-                                setIsExporting(false);
+                                setIsExporting(prev => ({ ...prev, html: false }));
                               }
                             }
                           }}
-                          disabled={isExporting}
+                          disabled={isExporting.html}
                           variant="outline"
                           size="sm"
                           className="flex items-center space-x-2"
@@ -469,13 +468,14 @@ function App() {
                           <Download className="h-4 w-4" />
                           <span>Exportar HTML + Imagem + PDF</span>
                         </Button>
+                        */}
                       </div>
                     </div>
                     <CardDescription>
                       Preview do seu encarte promocional
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex-1 flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
+                  <CardContent className="flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
                       <FlyerPreview
                         ref={flyerRef}
                         config={view.config!}

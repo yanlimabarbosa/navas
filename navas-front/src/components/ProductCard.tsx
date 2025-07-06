@@ -1,16 +1,32 @@
 import React from "react";
 import { ProductGroup, Product } from "../types";
 
-const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
-
 const productTitleClass =
   "text-[13px] font-bold text-[#6d6e71] text-center leading-tight uppercase tracking-tight truncate w-full";
 
-const PriceDisplay = ({ price }: { price: number }) => (
-  <span className="text-[20px] font-extrabold text-[#e7010f] tracking-tighter">
-    R$ {formatPrice(price)}
-  </span>
-);
+const PriceDisplay = ({ price }: { price: number }) => {
+  const formattedPrice = (price || 0).toFixed(2).replace(".", ",");
+  const fullPriceText = `R$ ${formattedPrice}`;
+  
+  return (
+    <span 
+      className="text-xl font-black text-red-600" 
+      style={{ 
+        fontSize: '20px', 
+        fontWeight: '900', 
+        color: '#e7010f',
+        letterSpacing: '-0.025em',
+        display: 'inline-block',
+        whiteSpace: 'nowrap',
+        minWidth: '95px',
+        textAlign: 'center'
+      }}
+      data-price={fullPriceText}
+    >
+      {fullPriceText}
+    </span>
+  );
+};
 
 const ImageBlock = ({ src, alt }: { src?: string; alt: string }) =>
   src ? (
@@ -25,32 +41,56 @@ const ImageBlock = ({ src, alt }: { src?: string; alt: string }) =>
     </div>
   );
 
-const ProductSpecsRow = ({ product }: { product: Product }) => (
-  <div className="flex w-full h-[24px] items-center overflow-hidden">
-    <div className="flex items-center bg-black pl-2 pr-2 h-full flex-1 min-w-0 rounded-l-lg">
-      <span className="text-white text-[13px] font-bold mr-2 min-w-[44px] text-left">
-        {product.code}
-      </span>
-      <span className="text-[#bdbdbd] text-[13px] font-semibold truncate text-center w-full">
-        {product.specifications}
-      </span>
+const ProductSpecsRow = ({ product }: { product: Product }) => {
+  const formattedPrice = (product.price || 0).toFixed(2).replace(".", ",");
+  const fullPriceText = `R$ ${formattedPrice}`;
+  
+  return (
+    <div className="flex w-full h-[24px] items-center overflow-hidden rounded-lg bg-black">
+      <div className="flex items-center bg-black pl-2 pr-2 h-full flex-1 min-w-0">
+        <span className="text-white text-[13px] font-bold mr-2 min-w-[44px] text-left">
+          {product.code}
+        </span>
+        <span className="text-[#bdbdbd] text-[13px] font-semibold truncate text-center w-full">
+          {product.specifications}
+        </span>
+      </div>
+      <div 
+        className="flex items-center justify-center bg-yellow-400 px-2 h-full" 
+        style={{ 
+          minWidth: '75px',
+          borderTopRightRadius: '8px',
+          borderBottomRightRadius: '8px',
+          borderTopLeftRadius: '8px',
+          borderBottomLeftRadius: '8px'
+        }}
+      >
+        <span 
+          className="text-sm font-black text-red-600" 
+          style={{ 
+            fontSize: '13px', 
+            fontWeight: '900', 
+            color: '#e7010f',
+            letterSpacing: '-0.025em',
+            display: 'inline-block',
+            whiteSpace: 'nowrap',
+            textAlign: 'center'
+          }}
+          data-price={fullPriceText}
+        >
+          {fullPriceText}
+        </span>
+      </div>
     </div>
-    <div className="flex items-center justify-end bg-yellow-400 px-2 h-full w-auto rounded-r-xl">
-      <span className="text-[13px] font-extrabold text-[#e7010f] tracking-tighter">
-        R$ {formatPrice(product.price)}
-      </span>
-    </div>
-  </div>
-);
+  );
+};
 
 interface ProductCardProps {
   group: ProductGroup;
-  isPreview?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   group,
-  isPreview = false,
 }) => {
   const renderSingleProduct = (product: Product) => (
     <>
@@ -71,8 +111,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <h3 className={productTitleClass}>{product.description}</h3>
         </div>
       </div>
-      <div className="w-full">
-        <div className="w-full flex items-center justify-center bg-yellow-400 text-center h-[38px] rounded-b-md">
+      <div className="w-full flex justify-center">
+        <div 
+          className="flex items-center justify-center bg-yellow-400 text-center h-[38px] px-4" 
+          style={{ 
+            minHeight: '38px',
+            minWidth: '120px',
+            borderTopLeftRadius: '8px',
+            borderTopRightRadius: '8px'
+          }}
+        >
           <PriceDisplay price={product.price} />
         </div>
       </div>
@@ -111,8 +159,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <h3 className={productTitleClass}>{group.title}</h3>
         </div>
       </div>
-      <div className="w-full">
-        <div className="w-full flex items-center justify-center bg-yellow-400 text-center h-[38px] rounded-b-md">
+      <div className="w-full flex justify-center">
+        <div 
+          className="flex items-center justify-center bg-yellow-400 text-center h-[38px] px-4" 
+          style={{ 
+            minHeight: '38px',
+            minWidth: '120px',
+            borderTopLeftRadius: '8px',
+            borderTopRightRadius: '8px'
+          }}
+        >
           <PriceDisplay price={group.products[0].price} />
         </div>
       </div>

@@ -129,9 +129,9 @@
   scale: none !important;
   max-width: none !important;
   max-height: none !important;
-  overflow: visible !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  overflow: visible !important;
 }
 
 .export-mode * {
@@ -158,4 +158,80 @@
 
 .export-mode .mt-auto {
   margin-top: auto !important;
+}
+
+/* Ensure text truncation works properly in export mode */
+.export-mode .truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Ensure all text styling is preserved */
+.export-mode .text-center {
+  text-align: center !important;
+}
+
+.export-mode .text-left {
+  text-align: left !important;
+}
+
+.export-mode .text-right {
+  text-align: right !important;
+}
+
+.export-mode .uppercase {
+  text-transform: uppercase !important;
+}
+
+.export-mode .font-bold {
+  font-weight: 700 !important;
+}
+
+.export-mode .font-semibold {
+  font-weight: 600 !important;
+}
+
+.export-mode .font-extrabold {
+  font-weight: 800 !important;
+}
+
+/* Ensure proper sizing */
+.export-mode .w-full {
+  width: 100% !important;
+}
+
+.export-mode .h-full {
+  height: 100% !important;
+}
+
+/* Ensure proper positioning */
+.export-mode .relative {
+  position: relative !important;
+}
+
+.export-mode .absolute {
+  position: absolute !important;
+}
+
+/* Ensure proper background colors */
+.export-mode .bg-white {
+  background-color: #ffffff !important;
+}
+
+.export-mode .bg-black {
+  background-color: #000000 !important;
+}
+
+.export-mode .bg-yellow-400 {
+  background-color: #facc15 !important;
+}
+
+/* Ensure proper text colors */
+.export-mode .text-white {
+  color: #ffffff !important;
+}
+
+.export-mode .text-black {
+  color: #000000 !important;
 }

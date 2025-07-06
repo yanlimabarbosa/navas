@@ -1,5 +1,171 @@
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image';
 import jsPDF from 'jspdf';
+
+// DIRECT CAPTURE WITH DOM-TO-IMAGE - NO HTML GENERATION
+export async function exportElementAsImage(element: HTMLElement, filename: string = 'encarte.jpg'): Promise<void> {
+  console.log('🎯 DIRECT CAPTURE with DOM-TO-IMAGE - Starting image export without HTML generation');
+  
+  try {
+    // Wait for fonts and any pending renders
+    await document.fonts.ready;
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
+    
+    // Force DOM update and debugging
+    element.style.display = 'none';
+    void element.offsetHeight; // Force reflow
+    element.style.display = '';
+    void element.offsetHeight; // Force reflow again
+    
+    // Debug: Log all price elements to see what's in the DOM
+    const priceElements = element.querySelectorAll('span[style*="color: #e7010f"]');
+    console.log('🔍 Price elements found:', priceElements.length);
+    priceElements.forEach((el, index) => {
+      console.log(`Price ${index + 1}:`, el.textContent);
+      console.log(`Price ${index + 1} data-price:`, el.getAttribute('data-price'));
+    });
+    
+    // Additional debug: Check all spans with price data
+    const allPriceSpans = element.querySelectorAll('span[data-price]');
+    console.log('🔍 All price spans found:', allPriceSpans.length);
+    allPriceSpans.forEach((el, index) => {
+      console.log(`Price span ${index + 1}:`, el.textContent, '- data-price:', el.getAttribute('data-price'));
+    });
+    
+    console.log('📸 Capturing element directly with dom-to-image:', element);
+    
+    // A4 DIMENSIONS - Standard paper size
+    const A4_WIDTH_PX = 2480;  // A4 width at 300 DPI (210mm)
+    const A4_HEIGHT_PX = 3508; // A4 height at 300 DPI (297mm)
+    
+    // Calculate scale factors to fill A4 completely
+    const scaleX = A4_WIDTH_PX / element.offsetWidth;
+    const scaleY = A4_HEIGHT_PX / element.offsetHeight;
+    const scale = Math.max(scaleX, scaleY); // Use larger scale to fill completely
+    
+    console.log('📏 A4 scaling calculation:', {
+      elementWidth: element.offsetWidth,
+      elementHeight: element.offsetHeight,
+      A4_WIDTH: A4_WIDTH_PX,
+      A4_HEIGHT: A4_HEIGHT_PX,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      finalScale: scale
+    });
+    
+    const dataUrl = await domtoimage.toJpeg(element, {
+      quality: 0.95,
+      width: A4_WIDTH_PX,   // Target A4 width
+      height: A4_HEIGHT_PX, // Target A4 height
+      bgcolor: '#ffffff',
+      style: {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: element.offsetWidth + 'px',
+        height: element.offsetHeight + 'px'
+      }
+    });
+
+    console.log('✅ Data URL created with dom-to-image');
+
+    // Download immediately
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('🎉 Image exported successfully with dom-to-image:', filename);
+  } catch (error) {
+    console.error('❌ Error in dom-to-image capture:', error);
+    throw error;
+  }
+}
+
+// DIRECT CAPTURE WITH DOM-TO-IMAGE - NO HTML GENERATION
+export async function exportElementAsPDF(element: HTMLElement, filename: string = 'encarte.pdf'): Promise<void> {
+  console.log('🎯 DIRECT CAPTURE with DOM-TO-IMAGE - Starting PDF export without HTML generation');
+  
+  try {
+    // Wait for fonts and any pending renders
+    await document.fonts.ready;
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
+    
+    // Force DOM update and debugging
+    element.style.display = 'none';
+    void element.offsetHeight; // Force reflow
+    element.style.display = '';
+    void element.offsetHeight; // Force reflow again
+    
+    // Debug: Log all price elements to see what's in the DOM
+    const priceElements = element.querySelectorAll('span[style*="color: #e7010f"]');
+    console.log('🔍 PDF Price elements found:', priceElements.length);
+    priceElements.forEach((el, index) => {
+      console.log(`PDF Price ${index + 1}:`, el.textContent);
+      console.log(`PDF Price ${index + 1} data-price:`, el.getAttribute('data-price'));
+    });
+    
+    console.log('📸 Capturing element directly for PDF with dom-to-image:', element);
+    
+    // A4 DIMENSIONS - Standard paper size for PDF
+    const A4_WIDTH_PX = 2480;  // A4 width at 300 DPI (210mm)
+    const A4_HEIGHT_PX = 3508; // A4 height at 300 DPI (297mm)
+    
+    // Calculate scale factors to fill A4 completely
+    const scaleX = A4_WIDTH_PX / element.offsetWidth;
+    const scaleY = A4_HEIGHT_PX / element.offsetHeight;
+    const scale = Math.max(scaleX, scaleY); // Use larger scale to fill completely
+    
+    console.log('📏 A4 PDF scaling calculation:', {
+      elementWidth: element.offsetWidth,
+      elementHeight: element.offsetHeight,
+      A4_WIDTH: A4_WIDTH_PX,
+      A4_HEIGHT: A4_HEIGHT_PX,
+      scaleX: scaleX,
+      scaleY: scaleY,
+      finalScale: scale
+    });
+    
+    const dataUrl = await domtoimage.toJpeg(element, {
+      quality: 0.95,
+      width: A4_WIDTH_PX,   // Target A4 width
+      height: A4_HEIGHT_PX, // Target A4 height
+      bgcolor: '#ffffff',
+      style: {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: element.offsetWidth + 'px',
+        height: element.offsetHeight + 'px'
+      }
+    });
+
+    console.log('✅ Data URL created with dom-to-image');
+
+    // Create PDF directly from dom-to-image data
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Since we're capturing at A4 dimensions, use full PDF page
+    const imgWidth = pdfWidth;
+    const imgHeight = pdfHeight;
+    const x = 0; // No centering needed - use full page
+    const y = 0;
+
+    pdf.addImage(dataUrl, 'JPEG', x, y, imgWidth, imgHeight);
+    pdf.save(filename);
+    
+    console.log('🎉 PDF exported successfully with dom-to-image:', filename);
+  } catch (error) {
+    console.error('❌ Error in dom-to-image PDF capture:', error);
+    throw error;
+  }
+}
 
 // Helper: generate the standalone HTML string for the flyer
 export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promise<string> {
@@ -39,20 +205,98 @@ export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promis
       for (const rule of Array.from(rules)) {
         cssText += rule.cssText + '\n';
       }
-    } catch (e) {
+    } catch {
       // Ignore CORS issues
     }
   }
 
   cssText += `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');\n`;
 
-  // Build the HTML
-  const html = `<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=794, initial-scale=1.0\" />\n<title>Flyer Export</title>\n<style>${cssText}
-    html, body { height: 100%; margin: 0; padding: 0; background: #eee; }
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; }
-    #flyer-export { width: 794px; background: #fff; box-shadow: 0 0 24px #0002; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    @media print { html, body { background: #fff !important; width: 210mm; height: 297mm; margin: 0; padding: 0; } #flyer-export { width: 210mm; box-shadow: none !important; margin: 0 !important; page-break-after: avoid; } }
-  </style>\n</head>\n<body>\n<div id=\"flyer-export\">${clone.outerHTML}</div>\n</body>\n</html>`;
+  // Build the HTML with enhanced styling
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1240, initial-scale=1.0" />
+<title>Flyer Export</title>
+<style>
+${cssText}
+    /* Export-specific styles */
+    html, body { 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      background: #eee; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      box-sizing: border-box; 
+    }
+    #flyer-export { 
+      width: 1240px; 
+      height: 1748px;
+      background: #fff; 
+      box-shadow: 0 0 24px #0002; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: visible; 
+      position: relative; 
+      box-sizing: border-box;
+    }
+    
+    /* Ensure all critical styles are applied */
+    .truncate { 
+      overflow: hidden !important; 
+      text-overflow: ellipsis !important; 
+      white-space: nowrap !important; 
+    }
+    .text-center { text-align: center !important; }
+    .text-left { text-align: left !important; }
+    .text-right { text-align: right !important; }
+    .uppercase { text-transform: uppercase !important; }
+    .font-bold { font-weight: 700 !important; }
+    .font-semibold { font-weight: 600 !important; }
+    .font-extrabold { font-weight: 800 !important; }
+    .w-full { width: 100% !important; }
+    .h-full { height: 100% !important; }
+    .flex { display: flex !important; }
+    .flex-col { flex-direction: column !important; }
+    .flex-1 { flex: 1 1 0% !important; }
+    .bg-white { background-color: #ffffff !important; }
+    .bg-black { background-color: #000000 !important; }
+    .bg-yellow-400 { background-color: #facc15 !important; }
+    .text-white { color: #ffffff !important; }
+    .text-black { color: #000000 !important; }
+    .relative { position: relative !important; }
+    .absolute { position: absolute !important; }
+    
+    @media print { 
+      html, body { 
+        background: #fff !important; 
+        width: 210mm; 
+        height: 297mm; 
+        margin: 0; 
+        padding: 0; 
+      } 
+      #flyer-export { 
+        width: 210mm; 
+        box-shadow: none !important; 
+        margin: 0 !important; 
+        page-break-after: avoid; 
+      } 
+    }
+  </style>
+</head>
+<body>
+<div id="flyer-export">${clone.outerHTML}</div>
+</body>
+</html>`;
   return html;
 }
 
@@ -78,85 +322,14 @@ export async function exportFlyerAsHTML(flyerElement: HTMLElement, filename: str
   return html;
 }
 
-export async function exportFlyerHTMLAsImage(flyerElement: HTMLElement, filename: string = 'encarte.jpg', html?: string) {
-  if (!html) html = await generateFlyerExportHTML(flyerElement);
-  // Create an offscreen iframe to render the HTML
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.left = '-9999px';
-  iframe.style.top = '0';
-  iframe.style.width = '820px';
-  iframe.style.height = '1200px';
-  document.body.appendChild(iframe);
-  // Set srcdoc and robustly wait for content to be ready
-  iframe.srcdoc = html;
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  let flyerDiv = null;
-  for (let i = 0; i < 30; i++) { // up to ~3s
-    if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-      flyerDiv = iframe.contentDocument.getElementById('flyer-export');
-      if (flyerDiv) break;
-    }
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  if (!flyerDiv) {
-    console.error('Flyer div not found in iframe for image export');
-    document.body.removeChild(iframe);
-    return;
-  }
-  await new Promise(r => setTimeout(r, 500));
-  await (iframe.contentDocument as Document).fonts?.ready;
-  // Use html2canvas to capture the flyer
-  const canvas = await html2canvas(flyerDiv, { useCORS: true, backgroundColor: '#fff', scale: 2 });
-  // Download as image
-  const link = document.createElement('a');
-  link.download = filename;
-  link.href = canvas.toDataURL('image/jpeg', 0.95);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  document.body.removeChild(iframe);
+export async function exportFlyerHTMLAsImage(flyerElement: HTMLElement, filename: string = 'encarte.jpg') {
+  // Legacy function - redirects to new dom-to-image method
+  console.log('Legacy HTML export called - redirecting to dom-to-image direct capture');
+  return await exportElementAsImage(flyerElement, filename);
 }
 
-export async function exportFlyerHTMLAsPDF(flyerElement: HTMLElement, filename: string = 'encarte.pdf', html?: string) {
-  if (!html) html = await generateFlyerExportHTML(flyerElement);
-  // Create an offscreen iframe to render the HTML
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.left = '-9999px';
-  iframe.style.top = '0';
-  iframe.style.width = '820px';
-  iframe.style.height = '1200px';
-  document.body.appendChild(iframe);
-  // Set srcdoc and robustly wait for content to be ready
-  iframe.srcdoc = html;
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  let flyerDiv = null;
-  for (let i = 0; i < 30; i++) { // up to ~3s
-    if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-      flyerDiv = iframe.contentDocument.getElementById('flyer-export');
-      if (flyerDiv) break;
-    }
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  if (!flyerDiv) {
-    console.error('Flyer div not found in iframe for PDF export');
-    document.body.removeChild(iframe);
-    return;
-  }
-  await new Promise(r => setTimeout(r, 500));
-  await (iframe.contentDocument as Document).fonts?.ready;
-  // Use html2canvas to capture the flyer
-  const canvas = await html2canvas(flyerDiv, { useCORS: true, backgroundColor: '#fff', scale: 2 });
-  // Prepare PDF
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = 210; // mm (A4 width)
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  const y = (pdfHeight - imgHeight) / 2;
-  pdf.addImage(imgData, 'JPEG', 0, y, imgWidth, imgHeight);
-  pdf.save(filename);
-  document.body.removeChild(iframe);
+export async function exportFlyerHTMLAsPDF(flyerElement: HTMLElement, filename: string = 'encarte.pdf') {
+  // Legacy function - redirects to new dom-to-image method
+  console.log('Legacy HTML PDF export called - redirecting to dom-to-image direct capture');
+  return await exportElementAsPDF(flyerElement, filename);
 } 
