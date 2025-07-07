@@ -55,7 +55,7 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
             specifications: row.Diferencial,
           }));
 
-          let imgPath = `imagens_produtos/${firstRow.Imagem}.png`;
+          let imgPath = `imagens_produtos/${firstRow.Imagem}.jpg`;
           if (imgPath.startsWith('/')) imgPath = imgPath.slice(1);
           return {
             id: `group-${position}`,
