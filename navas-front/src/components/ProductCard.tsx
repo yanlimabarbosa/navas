@@ -160,8 +160,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   );
 
   const renderDifferentPriceGroup = () => (
-    <div className="flex flex-col justify-between flex-1">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[200px] p-2 mt-auto">
+    <div className="flex flex-col flex-1 h-full">
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
         <ImageBlock
           src={group.image}
           alt={
