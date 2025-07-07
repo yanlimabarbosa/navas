@@ -142,7 +142,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         ))}
       </div>
 
-      <div className="flex flex-col items-center px-2 mb-2">
+      <div className="flex flex-col items-center px-2">
         <h3 className={`${productTitleClass} mb-1`}>{group.title}</h3>
         <div
           className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-t-[16px]"
@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
 
   const renderDifferentPriceGroup = () => (
     <div className="flex flex-col justify-between flex-1">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[250px] p-2 mt-auto">
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[200px] p-2 mt-auto">
         <ImageBlock
           src={group.image}
           alt={
