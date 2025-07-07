@@ -89,7 +89,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSingleProduct = (product: Product) => (
     <div className="flex flex-col flex-1 h-full">
       {/* Image takes available space */}
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[250px] p-2">
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-4">
         <ImageBlock
           src={group.image}
           alt={group.title ?? product.description ?? "Imagem do produto"}
@@ -99,8 +99,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         </div>
       </div>
 
-      {/* Title and price container pushed to bottom with mt-auto */}
-      <div className="flex flex-col items-center px-2 mt-auto">
+      {/* Title and price container pushed to bottom with */}
+      <div className="flex flex-col items-center px-2">
         <h3 className={`${productTitleClass} mb-1`}>{product.description}</h3>
         <div
           className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-t-[16px]"
@@ -120,7 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSamePriceGroup = () => (
     <div className="flex flex-col flex-1 h-full">
       {/* Image takes available space */}
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[250px] p-2">
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
         <ImageBlock
           src={group.image}
           alt={
@@ -142,7 +142,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         ))}
       </div>
 
-      <div className="flex flex-col items-center px-2 mt-auto mb-2">
+      <div className="flex flex-col items-center px-2 mb-2">
         <h3 className={`${productTitleClass} mb-1`}>{group.title}</h3>
         <div
           className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-t-[16px]"
@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
 
   const renderDifferentPriceGroup = () => (
     <div className="flex flex-col justify-between flex-1">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[250px] p-2">
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] max-h-[250px] p-2 mt-auto">
         <ImageBlock
           src={group.image}
           alt={
@@ -170,7 +170,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         />
       </div>
 
-      <div className="w-full flex items-center justify-center mt-auto mb-2">
+      <div className="w-full flex items-center justify-center mb-2">
         <h3 className={productTitleClass}>{group.title}</h3>
       </div>
 
