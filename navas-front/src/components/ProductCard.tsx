@@ -28,18 +28,23 @@ const PriceDisplay = ({ price }: { price: number }) => {
   );
 };
 
-const ImageBlock = ({ src, alt }: { src?: string; alt: string }) =>
-  src ? (
-    <img
-      src={src.startsWith("/") ? src.slice(1) : src}
-      alt={alt}
-      className="max-h-full max-w-full object-contain"
-    />
-  ) : (
-    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-      <span className="text-xs text-gray-400">Sem Imagem</span>
-    </div>
-  );
+const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => (
+  <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
+    {src ? (
+      <img
+        src={src.startsWith("/") ? src.slice(1) : src}
+        alt={alt}
+        className="w-full h-full object-contain"
+      />
+    ) : (
+      <div className="w-full h-full  flex items-center justify-center rounded-[4px]">
+        <span className="text-[10px] text-gray-400">Sem Imagem</span>
+      </div>
+    )}
+  </div>
+);
+
+
 
 const ProductSpecsRow = ({ product }: { product: Product }) => {
   const formattedPrice = (product.price ?? 0).toFixed(2).replace(".", ",");
@@ -200,11 +205,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   };
 
   const baseClasses =
-    "w-full h-full flex flex-col overflow-hidden p-0 relative " +
-    (["single", "same-price", "different-price"].includes(group.groupType)
-      ? "bg-white border border-black shadow-none rounded-[8px] " +
-        'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
-      : "bg-white border-2 border-gray-100 shadow-sm rounded-lg p-2");
+  "w-full h-full flex flex-col overflow-hidden p-0 relative " +
+  (["single", "same-price", "different-price"].includes(group.groupType)
+    ? "bg-white border border-black shadow-none rounded-none " +
+      'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
+    : "bg-white border-2 border-gray-100 shadow-sm rounded-none p-2");
 
-  return <div className={baseClasses}>{renderContent()}</div>;
+return <div className={baseClasses}>{renderContent()}</div>;
 };

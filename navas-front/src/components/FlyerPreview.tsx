@@ -16,7 +16,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
     return (
       <div
         ref={ref}
-        className={`bg-white shadow-xl rounded-lg overflow-hidden flex flex-col ${className}`}
+        className={`bg-white shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
         style={{
           width: '1240px',
           height: `${474 + 1070 + 204}px`, // 1748px
@@ -65,24 +65,25 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
         </div>
 
         {/* Product Grid */}
-        <div className="flex flex-col" style={{ width: '1240px', height: '1070px', padding: '16px', boxSizing: 'border-box' }}>
-          <div className="grid grid-cols-4 grid-rows-3 gap-2" style={{ width: '100%', height: '100%' }}>
-            {gridSlots.map((position) => {
-              const groupForPosition = groupsByPosition.get(position);
-              return (
-                <div key={position} className="h-full">
-                  {groupForPosition ? (
-                    <ProductCard group={groupForPosition} />
-                  ) : (
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg h-full flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">Posição {position}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        <div className="flex flex-col" style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}>
+  <div className="grid grid-cols-4 grid-rows-3 gap-0" style={{ width: '100%', height: '100%' }}>
+    {gridSlots.map((position) => {
+      const groupForPosition = groupsByPosition.get(position);
+      return (
+        <div key={position} className="h-full">
+          {groupForPosition ? (
+            <ProductCard group={groupForPosition} />
+          ) : (
+            <div className="bg-gray-50 border-2 border-dashed border-gray-200 h-full flex items-center justify-center">
+              <span className="text-gray-400 text-xs">Posição {position}</span>
+            </div>
+          )}
         </div>
+      );
+    })}
+  </div>
+</div>
+
 
         {/* Footer */}
         <div
