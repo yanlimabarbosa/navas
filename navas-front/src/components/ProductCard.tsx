@@ -2,7 +2,7 @@ import React from "react";
 import { ProductGroup, Product } from "../types";
 
 const productTitleClass =
-  "text-[13px] font-bold text-[#6d6e71] text-center leading-tight uppercase tracking-tight truncate w-full";
+  "text-[13px] font-bold text-[#6d6e71] text-center leading-tight uppercase tracking-tight break-words w-full";
 
 const PriceDisplay = ({ price }: { price: number }) => {
   const formattedPrice = (price ?? 0).toFixed(2).replace(".", ",");
@@ -43,8 +43,6 @@ const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => (
     )}
   </div>
 );
-
-
 
 const ProductSpecsRow = ({ product }: { product: Product }) => {
   const formattedPrice = (product.price ?? 0).toFixed(2).replace(".", ",");
@@ -93,7 +91,6 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSingleProduct = (product: Product) => (
     <div className="flex flex-col flex-1 h-full">
-      {/* Image takes available space */}
       <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-4">
         <ImageBlock
           src={group.image}
@@ -104,7 +101,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         </div>
       </div>
 
-      {/* Title and price container pushed to bottom with */}
       <div className="flex flex-col items-center px-2">
         <h3 className={`${productTitleClass} mb-1`}>{product.description}</h3>
         <div
@@ -124,7 +120,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
 
   const renderSamePriceGroup = () => (
     <div className="flex flex-col flex-1 h-full">
-      {/* Image takes available space */}
       <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
         <ImageBlock
           src={group.image}
@@ -134,7 +129,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         />
       </div>
 
-      {/* Specs list above title */}
       <div className="flex flex-col items-end w-full px-2 pb-2">
         {group.products.map((p) => (
           <div key={p.id} className="mb-1 last:mb-0 w-full flex justify-end">
@@ -205,11 +199,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   };
 
   const baseClasses =
-  "w-full h-full flex flex-col overflow-hidden p-0 relative " +
-  (["single", "same-price", "different-price"].includes(group.groupType)
-    ? "bg-white border border-black shadow-none rounded-none " +
-      'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
-    : "bg-white border-2 border-gray-100 shadow-sm rounded-none p-2");
+    "w-full h-full flex flex-col overflow-hidden p-0 relative " +
+    (["single", "same-price", "different-price"].includes(group.groupType)
+      ? "bg-white border border-black shadow-none rounded-none " +
+        'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
+      : "bg-white border-2 border-gray-100 shadow-sm rounded-none p-2");
 
-return <div className={baseClasses}>{renderContent()}</div>;
+  return <div className={baseClasses}>{renderContent()}</div>;
 };
