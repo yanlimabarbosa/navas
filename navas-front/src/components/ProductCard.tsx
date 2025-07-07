@@ -113,12 +113,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       <div className="w-full flex justify-center">
         <div 
-          className="flex items-center justify-center bg-yellow-400 text-center h-[38px] px-4" 
+         className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4" 
           style={{ 
-            minHeight: '38px',
-            minWidth: '120px',
-            borderTopLeftRadius: '8px',
-            borderTopRightRadius: '8px'
+            minHeight: '35px',
+            minWidth: '210px',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px'
           }}
         >
           <PriceDisplay price={product.price} />
@@ -159,12 +159,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       <div className="w-full flex justify-center">
         <div 
-          className="flex items-center justify-center bg-yellow-400 text-center h-[38px] px-4" 
+          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4" 
           style={{ 
-            minHeight: '38px',
-            minWidth: '120px',
-            borderTopLeftRadius: '8px',
-            borderTopRightRadius: '8px'
+            minHeight: '35px',
+            minWidth: '210px',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px'
           }}
         >
           <PriceDisplay price={group.products[0].price} />
