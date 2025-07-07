@@ -46,8 +46,8 @@ const ProductSpecsRow = ({ product }: { product: Product }) => {
   const fullPriceText = `R$ ${formattedPrice}`;
   
   return (
-    <div className="flex w-full h-[24px] items-center overflow-hidden rounded-lg bg-black">
-      <div className="flex items-center bg-black pl-2 pr-2 h-full flex-1 min-w-0">
+    <div className="flex w-full h-[24px] items-center overflow-hidden rounded-md bg-black">
+      <div className="flex items-center bg-black pl-2 pr-2 h-[24px] flex-1 min-w-0">
         <span className="text-white text-[13px] font-bold mr-2 min-w-[44px] text-left">
           {product.code}
         </span>
@@ -56,13 +56,13 @@ const ProductSpecsRow = ({ product }: { product: Product }) => {
         </span>
       </div>
       <div 
-        className="flex items-center justify-center bg-yellow-400 px-2 h-full" 
+        className="flex items-center justify-center bg-yellow-400 px-2 h-[24px]" 
         style={{ 
           minWidth: '75px',
-          borderTopRightRadius: '8px',
-          borderBottomRightRadius: '8px',
-          borderTopLeftRadius: '8px',
-          borderBottomLeftRadius: '8px'
+          borderTopRightRadius: '6px',
+          borderBottomRightRadius: '6px',
+          borderTopLeftRadius: '6px',
+          borderBottomLeftRadius: '6px'
         }}
       >
         <span 
@@ -100,8 +100,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             src={group.image}
             alt={group.title || product.description || "Imagem do produto"}
           />
-          <div className="absolute bottom-2 right-2 bg-black text-white text-[11px] px-2 py-0.5 rounded-md font-semibold shadow">
-            Cód. {product.code}
+          <div className="absolute bottom-2 right-2 bg-black text-white text-[13px] px-2 rounded-md font-bold shadow h-[24px] flex items-center">
+            {product.code}
           </div>
         </div>
         <div
@@ -186,7 +186,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="w-full flex items-center justify-center mt-1 mb-5">
         <h3 className={productTitleClass}>{group.title}</h3>
       </div>
-      <div className="flex flex-col gap-[1px] w-full px-2 pb-2">
+      <div className="flex flex-col gap-2 w-full px-2 pb-2">
         {group.products.slice(0, 3).map((p) => (
           <ProductSpecsRow key={p.id} product={p} />
         ))}
