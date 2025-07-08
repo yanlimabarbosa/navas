@@ -9,6 +9,7 @@ import { ThemeProvider } from './components/theme-provider';
 import { ThemeToggle } from './components/theme-toggle';
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import { Pagination } from './components/ui/pagination';
 import { Toaster } from './components/ui/toaster';
 import { useToast } from './hooks/use-toast';
 import { 
@@ -22,7 +23,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { saveProject, getProjects, getProjectById, updateProject, deleteProject } from './api/projects';
+import { saveProject, getProjectsPaginated, getProjectById, updateProject, deleteProject, ProjectSummary } from './api/projects';
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
 
@@ -47,14 +48,17 @@ function App() {
 
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
+  const [currentPage, setCurrentPage] = useState(0);
   const flyerRef = useRef<HTMLDivElement>(null);
 
   // Queries
-  const { data: projects, isLoading: isLoadingProjects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: getProjects,
+  const { data: projectsResponse, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects', currentPage],
+    queryFn: () => getProjectsPaginated(currentPage, 5),
     staleTime: 0, // Immediate refetch when invalidated
   });
+
+  const projects = projectsResponse?.projects || [];
 
   // Mutations
   const saveMutation = useMutation({
@@ -279,7 +283,7 @@ function App() {
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-6">
               <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
                 setCurrentProjectId(null); 
                 setView({ state: 'upload' });
@@ -307,7 +311,7 @@ function App() {
                 </Card>
               )}
 
-              {projects?.map(project => (
+              {projects?.map((project: ProjectSummary) => (
                 <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleLoadProject(project.id)}>
                   <CardHeader>
                     <CardTitle className="line-clamp-1">{project.name}</CardTitle>
@@ -331,6 +335,20 @@ function App() {
                 </Card>
               ))}
             </div>
+
+            {/* Pagination Controls */}
+            {projectsResponse && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={projectsResponse.currentPage}
+                  totalPages={projectsResponse.totalPages}
+                  totalElements={projectsResponse.totalElements}
+                  hasNext={projectsResponse.hasNext}
+                  hasPrevious={projectsResponse.hasPrevious}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
           </div>
         );
 

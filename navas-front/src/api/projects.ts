@@ -26,6 +26,16 @@ export interface ProjectSummary {
     updatedAt: string;
 }
 
+export interface PagedProjectsResponse {
+    projects: ProjectSummary[];
+    currentPage: number;
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+}
+
 export interface FullProject extends ProjectSummary {
     config: FlyerConfig;
     groups: ProductGroup[];
@@ -38,10 +48,16 @@ export interface SaveProjectPayload {
 }
 
 // API Functions
-export const getProjects = async (): Promise<ProjectSummary[]> => {
+export const getProjects = async (page: number = 0, size: number = 5): Promise<ProjectSummary[]> => {
     const apiClient = await createApiClient();
-    const response = await apiClient.get('/projects');
-    return response.data;
+    const response = await apiClient.get(`/projects?page=${page}&size=${size}`);
+    return response.data.projects; // Extract projects array for backward compatibility
+};
+
+export const getProjectsPaginated = async (page: number = 0, size: number = 5): Promise<PagedProjectsResponse> => {
+    const apiClient = await createApiClient();
+    const response = await apiClient.get(`/projects?page=${page}&size=${size}`);
+    return response.data; // Return full pagination response
 };
 
 export const getProjectById = async (id: string): Promise<FullProject> => {
