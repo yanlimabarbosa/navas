@@ -1,4 +1,37 @@
 export class ImageProcessor {
+  static readonly SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+
+  static getImagePath(baseFileName: string | undefined | null, prefix: string = 'imagens_produtos/'): string {
+    // Handle undefined or null baseFileName
+    if (!baseFileName) {
+      console.warn('Nome do arquivo de imagem não fornecido');
+      return '';
+    }
+    // Force to string
+    const baseName = String(baseFileName);
+    let imgPath = baseName;
+    if (!imgPath.includes('.')) {
+      // If no extension provided, try to find the first matching extension
+      for (const ext of ImageProcessor.SUPPORTED_EXTENSIONS) {
+        // Create a temporary image to check if the file exists
+        const img = new Image();
+        img.src = `${prefix}${baseName}${ext}`;
+        if (img.complete) {
+          imgPath = `${baseName}${ext}`;
+          break;
+        }
+      }
+      // If no extension found, default to .jpg
+      if (!imgPath.includes('.')) {
+        imgPath = `${baseName}.jpg`;
+      }
+    }
+    
+    let fullPath = `${prefix}${imgPath}`;
+    if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
+    return fullPath;
+  }
+
   static validateImageDimensions(
     file: File, 
     expectedDimensions: { width: number; height: number }

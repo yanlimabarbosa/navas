@@ -66,14 +66,23 @@ O sistema aceita preços em ambos os formatos:
 ### Localização das Imagens
 As imagens devem estar na pasta: `public/imagens_produtos/`
 
+### Formatos Suportados
+O sistema suporta os seguintes formatos de imagem:
+- **JPG/JPEG** (`.jpg`, `.jpeg`)
+- **PNG** (`.png`)
+- **WebP** (`.webp`)
+
 ### Nomenclatura
-- **Formato suportado**: PNG
 - **Nome no Excel**: Apenas o nome do arquivo (sem extensão)
-- **Arquivo físico**: `{nome}.png`
+- **Arquivo físico**: `{nome}.jpg`, `{nome}.jpeg`, `{nome}.png` ou `{nome}.webp`
 
 **Exemplo**:
 - **No Excel**: `1408177`
-- **Arquivo**: `public/imagens_produtos/1408177.png`
+- **Arquivos válidos**:
+  - `public/imagens_produtos/1408177.jpg`
+  - `public/imagens_produtos/1408177.jpeg`
+  - `public/imagens_produtos/1408177.png`
+  - `public/imagens_produtos/1408177.webp`
 
 ## 📝 Exemplo Prático
 
@@ -101,30 +110,13 @@ As imagens devem estar na pasta: `public/imagens_produtos/`
 1. **Posição inválida**: Usar números fora do range 1-12
 2. **Colunas faltando**: Não incluir todas as 6 colunas obrigatórias
 3. **Preços inválidos**: Usar texto em vez de número
-4. **Imagem não encontrada**: Nome no Excel não corresponde ao arquivo PNG
+4. **Imagem não encontrada**: Nome no Excel não corresponde ao arquivo de imagem
 5. **Codificação**: Caracteres especiais corrompidos
 
 ### ✅ Dicas para Evitar Erros:
 
-1. **Sempre salve como .xlsx** (Excel 2007+)
-2. **Use UTF-8** para caracteres especiais
-3. **Verifique se as imagens existem** na pasta correta
-4. **Não deixe células vazias** nas colunas obrigatórias
-5. **Teste com poucos produtos** primeiro
-
-## 🔧 Validação
-
-O sistema validará automaticamente:
-- ✅ Estrutura das colunas
-- ✅ Tipos de dados
-- ✅ Posições válidas (1-12)
-- ✅ Preços numéricos
-- ✅ Campos obrigatórios preenchidos
-
-## 📞 Suporte
-
-Se encontrar problemas com o formato do Excel:
-1. Verifique se seguiu exatamente esta estrutura
-2. Confira se as imagens estão na pasta correta
-3. Valide se não há células vazias nas colunas obrigatórias
-4. Teste com um arquivo pequeno primeiro
+1. Use o modelo de Excel fornecido como base
+2. Verifique se todas as imagens existem antes de importar
+3. Confira se os preços estão em formato numérico
+4. Mantenha os nomes dos arquivos simples, sem caracteres especiais
+5. Salve o Excel em formato .xlsx

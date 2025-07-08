@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { ProductGroup, Product, ExcelData } from '../types';
+import { ImageProcessor } from './imageProcessor';
 
 // Helper to determine the group type based on its products
 function getGroupType(products: Product[]): 'single' | 'same-price' | 'different-price' {
@@ -10,6 +11,29 @@ function getGroupType(products: Product[]): 'single' | 'same-price' | 'different
   const firstPrice = products[0].price;
   const allSamePrice = products.every(p => p.price === firstPrice);
   return allSamePrice ? 'same-price' : 'different-price';
+}
+
+// Validate required fields in Excel data
+function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | null {
+  if (!row.Posicao || typeof row.Posicao !== 'number') {
+    return `Linha ${rowIndex + 1}: Posição inválida ou faltando`;
+  }
+  if (row.Posicao < 1 || row.Posicao > 12) {
+    return `Linha ${rowIndex + 1}: Posição deve estar entre 1 e 12`;
+  }
+  if (!row.Codigo) {
+    return `Linha ${rowIndex + 1}: Código do produto faltando`;
+  }
+  if (!row.Descricao) {
+    return `Linha ${rowIndex + 1}: Descrição do produto faltando`;
+  }
+  if (!row.Preco || isNaN(Number(String(row.Preco).replace(',', '.')))) {
+    return `Linha ${rowIndex + 1}: Preço inválido ou faltando`;
+  }
+  if (!row.Imagem) {
+    return `Linha ${rowIndex + 1}: Nome da imagem faltando`;
+  }
+  return null;
 }
 
 export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
@@ -28,10 +52,27 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
       }
 
       try {
+        // Parse Excel file
         const workbook = XLSX.read(data, { type: 'array' });
+        if (!workbook.SheetNames.length) {
+          throw new Error("Arquivo Excel não contém planilhas.");
+        }
+
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
+
+        if (!json.length) {
+          throw new Error("Planilha está vazia ou não contém dados válidos.");
+        }
+
+        // Validate each row
+        for (let i = 0; i < json.length; i++) {
+          const error = validateExcelRow(json[i], i);
+          if (error) {
+            throw new Error(error);
+          }
+        }
 
         // Group rows by 'Posicao'
         const groupedByPosition = json.reduce((acc, row) => {
@@ -55,22 +96,24 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
             specifications: row.Diferencial,
           }));
 
-          let imgPath = `imagens_produtos/${firstRow.Imagem}.jpg`;
-          if (imgPath.startsWith('/')) imgPath = imgPath.slice(1);
+          // Get image path, using product code as fallback if image name is not provided
+          const imageName = String(firstRow.Imagem || firstRow.Codigo);
+          const imagePath = ImageProcessor.getImagePath(imageName);
+
           return {
             id: `group-${position}`,
             position: Number(position),
             title: firstRow.Descricao,
-            image: imgPath,
+            image: imagePath,
             products: products,
             groupType: getGroupType(products),
           };
         });
 
         resolve(productGroups);
-      } catch (e) {
-        console.error(e);
-        reject(new Error("Formato de arquivo inválido ou planilha corrompida."));
+      } catch (error) {
+        console.error('Erro ao processar Excel:', error);
+        reject(new Error(error instanceof Error ? error.message : "Erro ao processar arquivo Excel. Verifique se o formato está correto."));
       }
     };
 
@@ -115,7 +158,7 @@ export class ExcelProcessor {
           const worksheet = workbook.Sheets[sheetName];
           
           const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:C1');
-          const hasMinimumColumns = range.e.c >= 2; // At least 3 columns (0-indexed)
+          const hasMinimumColumns = range.e.c >= 5; // Need 6 columns (0-indexed, so check for 5)
           
           resolve(hasMinimumColumns);
         } catch {

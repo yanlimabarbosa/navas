@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
 import { Product, ProductGroup } from '../types';
+import { ImageProcessor } from '../utils/imageProcessor';
 
 interface ProductEditorProps {
   isOpen: boolean;
@@ -75,9 +76,7 @@ export const ProductEditor: React.FC<ProductEditorProps> = ({
     if (editingGroup.products.length > 0) {
       const groupToSave = { ...editingGroup };
       if (groupToSave.groupType === 'single' && groupToSave.products.length > 0) {
-        let imgPath = `imagens_produtos/${groupToSave.products[0].code}.jpg`;
-        if (imgPath.startsWith('/')) imgPath = imgPath.slice(1);
-        groupToSave.image = imgPath;
+        groupToSave.image = ImageProcessor.getImagePath(groupToSave.products[0].code);
       }
       onSave(groupToSave);
       onClose();
