@@ -13,25 +13,46 @@ function getGroupType(products: Product[]): 'single' | 'same-price' | 'different
   return allSamePrice ? 'same-price' : 'different-price';
 }
 
+// Check if a row is a phantom row (contains invisible characters or is essentially empty)
+function isPhantomRow(row: Partial<ExcelData>): boolean {
+  // Check if all main fields are invisible characters, empty, or null/undefined
+  const invisibleChar = '\u200B'; // Zero-width space character
+  
+  const posicao = String(row.Posicao || '').trim();
+  const codigo = String(row.Codigo || '').trim();
+  const descricao = String(row.Descricao || '').trim();
+  const preco = String(row.Preco || '').trim();
+  
+  // If any of the main fields contains only invisible characters or is empty
+  const isInvisibleOrEmpty = (value: string) => 
+    !value || value === invisibleChar || value.replace(/[\u200B\s]/g, '') === '';
+  
+  return isInvisibleOrEmpty(posicao) && 
+         isInvisibleOrEmpty(codigo) && 
+         isInvisibleOrEmpty(descricao) && 
+         isInvisibleOrEmpty(preco);
+}
+
 // Validate required fields in Excel data
 function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | null {
+  console.log(row);
   if (!row.Posicao || typeof row.Posicao !== 'number') {
-    return `Linha ${rowIndex + 1}: Posição inválida ou faltando`;
+    return `Linha ${rowIndex + 2}: Posição inválida ou faltando`;
   }
   if (row.Posicao < 1 || row.Posicao > 12) {
-    return `Linha ${rowIndex + 1}: Posição deve estar entre 1 e 12`;
+    return `Linha ${rowIndex + 2}: Posição deve estar entre 1 e 12`;
   }
   if (!row.Codigo) {
-    return `Linha ${rowIndex + 1}: Código do produto faltando`;
+    return `Linha ${rowIndex + 2}: Código do produto faltando`;
   }
   if (!row.Descricao) {
-    return `Linha ${rowIndex + 1}: Descrição do produto faltando`;
+    return `Linha ${rowIndex + 2}: Descrição do produto faltando`;
   }
   if (!row.Preco || isNaN(Number(String(row.Preco).replace(',', '.')))) {
-    return `Linha ${rowIndex + 1}: Preço inválido ou faltando`;
+    return `Linha ${rowIndex + 2}: Preço inválido ou faltando`;
   }
   if (!row.Imagem) {
-    return `Linha ${rowIndex + 1}: Nome da imagem faltando`;
+    return `Linha ${rowIndex + 2}: Nome da imagem faltando`;
   }
   return null;
 }
@@ -60,10 +81,17 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
 
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
+        const rawJson = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
+
+        if (!rawJson.length) {
+          throw new Error("Planilha está vazia ou não contém dados válidos.");
+        }
+
+        // Filter out phantom rows with invisible characters
+        const json = rawJson.filter(row => !isPhantomRow(row));
 
         if (!json.length) {
-          throw new Error("Planilha está vazia ou não contém dados válidos.");
+          throw new Error("Planilha não contém dados válidos após filtrar linhas vazias.");
         }
 
         // Validate each row
