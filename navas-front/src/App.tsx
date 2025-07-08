@@ -70,6 +70,7 @@ function App() {
         variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      setView({ state: 'dashboard' });
     },
     onError: (error) => {
       console.error('Erro ao salvar projeto:', error);
@@ -108,6 +109,8 @@ function App() {
     if (!file) return;
 
     try {
+      setCurrentProjectId(null);
+      
       const groups = await processExcelFile(file);
       const products = groups.flatMap(group => group.products);
       
@@ -264,7 +267,10 @@ function App() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setView({ state: 'upload' })}>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
+                setCurrentProjectId(null); 
+                setView({ state: 'upload' });
+              }}>
                 <CardHeader>
                   <div className="flex items-center space-x-2">
                     <Plus className="h-5 w-5 text-primary" />
