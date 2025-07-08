@@ -202,9 +202,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const baseClasses =
     "w-full h-full flex flex-col overflow-hidden p-0 relative " +
     (["single", "same-price", "different-price"].includes(group.groupType)
-      ? "bg-white border border-black shadow-none rounded-none " +
+      ? "bg-white shadow-none rounded-none " +
         'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
-      : "bg-white border-2 border-gray-100 shadow-sm rounded-none p-2");
+      : "bg-white shadow-sm rounded-none p-2");
 
   return <div className={baseClasses}>{renderContent()}</div>;
 };

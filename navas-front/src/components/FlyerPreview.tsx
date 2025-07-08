@@ -66,17 +66,27 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
 
         {/* Product Grid */}
         <div className="flex flex-col" style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}>
-  <div className="grid grid-cols-4 grid-rows-3 gap-0" style={{ width: '100%', height: '100%' }}>
+  <div className="grid grid-cols-4 grid-rows-3 gap-0 border-black" style={{ 
+    width: '100%', 
+    height: '100%',
+    borderTop: '1px solid black',
+    borderLeft: '1px solid black'
+  }}>
     {gridSlots.map((position) => {
       const groupForPosition = groupsByPosition.get(position);
       return (
-        <div key={position} className="h-full">
+        <div 
+          key={position} 
+          className="h-full"
+          style={{
+            borderRight: '1px solid black',
+            borderBottom: '1px solid black'
+          }}
+        >
           {groupForPosition ? (
             <ProductCard group={groupForPosition} />
           ) : (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-200 h-full flex items-center justify-center">
-              <span className="text-gray-400 text-xs">Posição {position}</span>
-            </div>
+            <div className="bg-white h-full"></div>
           )}
         </div>
       );
