@@ -2,6 +2,7 @@ package com.navas.navas.project.service;
 
 import com.navas.navas.project.dto.SaveProjectRequest;
 import com.navas.navas.project.dto.ProjectSummaryDTO;
+import com.navas.navas.project.dto.PagedProjectsResponseDTO;
 import com.navas.navas.project.model.FlyerConfig;
 import com.navas.navas.project.model.FlyerProject;
 import com.navas.navas.project.model.Product;
@@ -9,6 +10,9 @@ import com.navas.navas.project.model.ProductGroup;
 import com.navas.navas.project.repository.FlyerProjectRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -72,6 +76,25 @@ public class FlyerProjectService {
         return flyerProjectRepository.findAllOrderByUpdatedAtDesc().stream()
                 .map(project -> new ProjectSummaryDTO(project.getId(), project.getName(), project.getUpdatedAt()))
                 .collect(Collectors.toList());
+    }
+
+    public PagedProjectsResponseDTO getProjectsPaginated(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<FlyerProject> projectPage = flyerProjectRepository.findAllOrderByUpdatedAtDesc(pageable);
+        
+        List<ProjectSummaryDTO> projects = projectPage.getContent().stream()
+                .map(project -> new ProjectSummaryDTO(project.getId(), project.getName(), project.getUpdatedAt()))
+                .collect(Collectors.toList());
+        
+        return new PagedProjectsResponseDTO(
+                projects,
+                projectPage.getNumber(),
+                projectPage.getTotalPages(),
+                projectPage.getTotalElements(),
+                projectPage.getSize(),
+                projectPage.hasNext(),
+                projectPage.hasPrevious()
+        );
     }
 
     public Optional<FlyerProject> getProjectById(UUID id) {

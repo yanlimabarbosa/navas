@@ -1,6 +1,7 @@
 package com.navas.navas.project.controller;
 
 import com.navas.navas.project.dto.FlyerProjectResponseDTO;
+import com.navas.navas.project.dto.PagedProjectsResponseDTO;
 import com.navas.navas.project.dto.ProjectSummaryDTO;
 import com.navas.navas.project.dto.SaveProjectRequest;
 import com.navas.navas.project.model.FlyerProject;
@@ -34,8 +35,10 @@ public class FlyerProjectController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProjectSummaryDTO>> getAllProjects() {
-        return ResponseEntity.ok(flyerProjectService.getAllProjects());
+    public ResponseEntity<PagedProjectsResponseDTO> getProjects(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(flyerProjectService.getProjectsPaginated(page, size));
     }
 
     @GetMapping("/{id}")
