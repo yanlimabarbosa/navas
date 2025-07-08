@@ -26,6 +26,15 @@ import { saveProject, getProjects, getProjectById, updateProject, deleteProject 
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
 
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
+  );
+}
+
 function App() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -132,11 +141,15 @@ function App() {
         groups,
         products,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao processar arquivo:', error);
+      let message = "Erro ao processar arquivo. Verifique se o formato está correto.";
+      if (isErrorWithMessage(error)) {
+        message = error.message;
+      }
       toast({
         title: "Erro",
-        description: "Erro ao processar arquivo. Verifique se o formato está correto.",
+        description: message,
         variant: "destructive",
       });
     }
