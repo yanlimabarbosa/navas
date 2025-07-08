@@ -59,7 +59,7 @@ const ProductSpecsRow = ({ product }: { product: Product }) => {
         </span>
       </div>
       <div
-        className="flex items-center justify-center bg-yellow-400 px-2 h-[24px] rounded-[6px]"
+        className="flex items-center justify-center bg-yellow-400 px-2 h-[24px] rounded-l-[6px]"
         style={{
           minWidth: "75px",
         }}
@@ -96,7 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
           src={group.image}
           alt={group.title ?? product.description ?? "Imagem do produto"}
         />
-        <div className="absolute bottom-2 right-2 bg-black text-white text-[13px] px-2 rounded-md font-bold shadow h-[24px] flex items-center">
+        <div className="absolute bottom-2 right-0 bg-black text-white text-[13px] px-2 rounded-l-md font-bold shadow h-[24px] flex items-center">
           {product.code}
         </div>
       </div>
@@ -129,10 +129,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         />
         
         {/* Absolutely positioned codes and specs */}
-        <div className="absolute bottom-2 right-2 flex flex-col items-end">
+        <div className="absolute bottom-2 right-0 flex flex-col items-end">
           {group.products.map((p) => (
             <div key={p.id} className="mb-1 last:mb-0">
-              <div className="flex items-center bg-black pl-2 pr-2 rounded-md h-[24px] w-[110px] justify-center">
+              <div className="flex items-center bg-black pl-2 pr-2 rounded-l-md h-[24px] w-[110px] justify-center">
                 <span className="text-white text-[13px] font-bold truncate text-center">
                   {p.code} - {p.specifications}
                 </span>
