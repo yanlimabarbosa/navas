@@ -16,7 +16,7 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../assets/icon.png'),
+    icon: path.join(__dirname, '../assets/navas-logo.jpg'),
     title: 'Navas Promoções'
   });
 
@@ -47,8 +47,16 @@ function startBackend() {
       backendArgs = ['spring-boot:run'];
       backendCwd = path.join(__dirname, '../navas-backend');
     } else {
-      const dbPath = path.join(app.getPath('userData'), 'database', 'navas-db');
+      // Store database in the same folder as the application for portability
+      const appDir = path.dirname(process.execPath);
+      const dbPath = path.join(appDir, 'database', 'navas-db');
       const jarPath = path.join(process.resourcesPath, 'backend', 'navas-0.0.1-SNAPSHOT.jar');
+      
+      // Ensure database directory exists
+      const dbDir = path.dirname(dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
       
       backendPath = 'java';
       backendArgs = [
@@ -65,7 +73,8 @@ function startBackend() {
       stdio: 'pipe'
     });
     
-    const logDir = app.getPath('userData');
+    // Store logs in the application directory for portability
+    const logDir = isDev ? app.getPath('userData') : path.dirname(process.execPath);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }

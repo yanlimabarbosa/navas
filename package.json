@@ -48,6 +48,7 @@
     ],
     "win": {
       "target": "portable",
+      "icon": "assets/navas-logo.jpg",
       "sign": false,
       "signAndEditExecutable": false,
       "certificateFile": null,
@@ -55,11 +56,11 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "icon": "assets/navas-logo.jpg"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "assets/icon.png"
+      "icon": "assets/navas-logo.jpg"
     }
   }
 } 
