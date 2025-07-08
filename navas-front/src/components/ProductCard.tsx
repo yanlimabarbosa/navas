@@ -127,18 +127,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
             group.title ?? group.products[0]?.description ?? "Imagem do produto"
           }
         />
-      </div>
-
-      <div className="flex flex-col items-end w-full px-2 pb-2">
-        {group.products.map((p) => (
-          <div key={p.id} className="mb-1 last:mb-0 w-full flex justify-end">
-            <div className="flex items-center bg-black pl-2 pr-2 rounded-md h-[24px] w-[110px] ml-auto justify-center">
-              <span className="text-white text-[13px] font-bold truncate text-center">
-                {p.code} - {p.specifications}
-              </span>
+        
+        {/* Absolutely positioned codes and specs */}
+        <div className="absolute bottom-2 right-2 flex flex-col items-end">
+          {group.products.map((p) => (
+            <div key={p.id} className="mb-1 last:mb-0">
+              <div className="flex items-center bg-black pl-2 pr-2 rounded-md h-[24px] w-[110px] justify-center">
+                <span className="text-white text-[13px] font-bold truncate text-center">
+                  {p.code} - {p.specifications}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col items-center px-2">
