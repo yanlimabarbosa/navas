@@ -345,13 +345,148 @@ function App() {
                     Arraste um arquivo Excel aqui ou clique para selecionar
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <input 
-                    type="file" 
-                    accept=".xlsx,.xls" 
-                    onChange={handleFileChange}
-                    className="w-full p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 transition-colors cursor-pointer"
-                  />
+                <CardContent className="space-y-4">
+                  <div className="relative">
+                    <input 
+                      type="file" 
+                      accept=".xlsx,.xls" 
+                      onChange={handleFileChange}
+                      className="w-full h-32 opacity-0 absolute inset-0 z-10 cursor-pointer"
+                      title="Clique para selecionar ou arraste sua planilha"
+                    />
+                    <div className="w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg hover:border-primary/50 transition-all hover:bg-muted/50 flex flex-col items-center justify-center gap-2 p-4">
+                      <Upload className="h-8 w-8 text-muted-foreground/50" />
+                      <div className="text-center">
+                        <p className="font-medium text-sm">Arraste sua planilha Excel aqui</p>
+                        <p className="text-xs text-muted-foreground">ou clique para selecionar do seu computador</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Formatos aceitos: .xlsx, .xls</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2 text-sm">📋 Formato esperado da planilha:</h4>
+                    <div className="text-xs text-muted-foreground space-y-3">
+                      <p><strong>Colunas obrigatórias (nesta ordem):</strong></p>
+                      <ul className="list-disc list-inside ml-2 space-y-1">
+                        <li><strong>Posicao:</strong> Posição no encarte (1-12)</li>
+                        <li><strong>Codigo:</strong> Código único do produto (ex: 1408177, ABC123)</li>
+                        <li><strong>Preco:</strong> Preço do produto (ex: 10,50 ou 10.50)</li>
+                        <li><strong>Descricao:</strong> Nome/descrição do produto</li>
+                        <li><strong>Diferencial:</strong> Especificações técnicas (ex: 5MX19MM, 3/8")</li>
+                        <li><strong>Imagem:</strong> Nome do arquivo de imagem (sem extensão)</li>
+                      </ul>
+                      
+                      <div className="bg-background p-3 rounded">
+                        <p className="font-medium mb-2">🎯 Layout do Encarte (4x3 = 12 posições):</p>
+                        <div className="grid grid-cols-4 gap-1 text-center text-xs font-mono">
+                          <div className="bg-primary/10 p-1 rounded">1</div>
+                          <div className="bg-primary/10 p-1 rounded">2</div>
+                          <div className="bg-primary/10 p-1 rounded">3</div>
+                          <div className="bg-primary/10 p-1 rounded">4</div>
+                          <div className="bg-primary/10 p-1 rounded">5</div>
+                          <div className="bg-primary/10 p-1 rounded">6</div>
+                          <div className="bg-primary/10 p-1 rounded">7</div>
+                          <div className="bg-primary/10 p-1 rounded">8</div>
+                          <div className="bg-primary/10 p-1 rounded">9</div>
+                          <div className="bg-primary/10 p-1 rounded">10</div>
+                          <div className="bg-primary/10 p-1 rounded">11</div>
+                          <div className="bg-primary/10 p-1 rounded">12</div>
+                        </div>
+                      </div>
+
+                      <p className="pt-1"><strong>Exemplo de dados com os 3 tipos de agrupamento:</strong></p>
+                      <div className="bg-background p-2 rounded text-xs font-mono">
+                        <div className="w-full overflow-x-auto">
+                          <table className="w-full min-w-max">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left p-1 whitespace-nowrap">Posicao</th>
+                                <th className="text-left p-1 whitespace-nowrap">Codigo</th>
+                                <th className="text-left p-1 whitespace-nowrap">Preco</th>
+                                <th className="text-left p-1 whitespace-nowrap">Descricao</th>
+                                <th className="text-left p-1 whitespace-nowrap">Diferencial</th>
+                                <th className="text-left p-1 whitespace-nowrap">Imagem</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-muted">
+                              {/* Produto Único */}
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">1</td>
+                                <td className="p-1 whitespace-nowrap">1408177</td>
+                                <td className="p-1 whitespace-nowrap">6,69</td>
+                                <td className="p-1 whitespace-nowrap">FURADEIRA IMPACTO</td>
+                                <td className="p-1 whitespace-nowrap">750W</td>
+                                <td className="p-1 whitespace-nowrap">1408177</td>
+                              </tr>
+                              {/* Mesmo Preço - 3 produtos */}
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">2</td>
+                                <td className="p-1 whitespace-nowrap">PAR001</td>
+                                <td className="p-1 whitespace-nowrap">15,50</td>
+                                <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
+                                <td className="p-1 whitespace-nowrap">M6</td>
+                                <td className="p-1 whitespace-nowrap">porca_m6</td>
+                              </tr>
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">2</td>
+                                <td className="p-1 whitespace-nowrap">PAR002</td>
+                                <td className="p-1 whitespace-nowrap">15,50</td>
+                                <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
+                                <td className="p-1 whitespace-nowrap">M8</td>
+                                <td className="p-1 whitespace-nowrap">porca_m6</td>
+                              </tr>
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">2</td>
+                                <td className="p-1 whitespace-nowrap">PAR003</td>
+                                <td className="p-1 whitespace-nowrap">15,50</td>
+                                <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
+                                <td className="p-1 whitespace-nowrap">M10</td>
+                                <td className="p-1 whitespace-nowrap">porca_m6</td>
+                              </tr>
+                              {/* Preços Diferentes - 2 produtos */}
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">3</td>
+                                <td className="p-1 whitespace-nowrap">PARA001</td>
+                                <td className="p-1 whitespace-nowrap">8,90</td>
+                                <td className="p-1 whitespace-nowrap">PARAFUSO PHILLIPS</td>
+                                <td className="p-1 whitespace-nowrap">3,5x25mm</td>
+                                <td className="p-1 whitespace-nowrap">parafuso_1</td>
+                              </tr>
+                              <tr>
+                                <td className="p-1 whitespace-nowrap">3</td>
+                                <td className="p-1 whitespace-nowrap">PARA002</td>
+                                <td className="p-1 whitespace-nowrap">12,90</td>
+                                <td className="p-1 whitespace-nowrap">PARAFUSO PHILLIPS</td>
+                                <td className="p-1 whitespace-nowrap">4,0x30mm</td>
+                                <td className="p-1 whitespace-nowrap">parafuso_1</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 space-y-1 text-xs">
+                        <p className="font-medium">📝 Exemplos acima mostram:</p>
+                        <ul className="ml-4 space-y-1">
+                          <li>• <strong>Posição 1:</strong> Produto único (Furadeira)</li>
+                          <li>• <strong>Posição 2:</strong> Mesmo preço (3 porcas diferentes, R$ 15,50 cada)</li>
+                          <li>• <strong>Posição 3:</strong> Preços diferentes (2 parafusos, R$ 8,90 e R$ 12,90)</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <p className="text-xs italic">💡 <strong>Agrupamento automático:</strong></p>
+                        <ul className="text-xs italic ml-4 space-y-1">
+                          <li>• <strong>Mesmo preço:</strong> Produtos na mesma posição com preço igual</li>
+                          <li>• <strong>Preços diferentes:</strong> Produtos na mesma posição com preços distintos</li>
+                          <li>• <strong>Produto único:</strong> Um produto por posição</li>
+                        </ul>
+                      </div>
+                      
+                      {/* <p className="text-xs italic">🖼️ <strong>Imagens:</strong> Devem estar em <code>public/imagens_produtos/[nome].png</code></p> */}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
