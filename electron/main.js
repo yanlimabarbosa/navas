@@ -47,17 +47,15 @@ function startBackend() {
       backendArgs = ['spring-boot:run'];
       backendCwd = path.join(__dirname, '../navas-backend');
     } else {
-      // Store database in the same folder as the application for portability
       const appDir = path.dirname(process.execPath);
       const dbPath = path.join(appDir, 'database', 'navas-db');
       const jarPath = path.join(process.resourcesPath, 'backend', 'navas-0.0.1-SNAPSHOT.jar');
       
-      // Ensure database directory exists
       const dbDir = path.dirname(dbPath);
       if (!fs.existsSync(dbDir)) {
         fs.mkdirSync(dbDir, { recursive: true });
       }
-      
+
       backendPath = 'java';
       backendArgs = [
         '-jar',
@@ -72,8 +70,7 @@ function startBackend() {
       cwd: backendCwd,
       stdio: 'pipe'
     });
-    
-    // Store logs in the application directory for portability
+
     const logDir = isDev ? app.getPath('userData') : path.dirname(process.execPath);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -86,14 +83,20 @@ function startBackend() {
     backendProcess.stderr.pipe(logStream);
 
     backendProcess.stdout.on('data', (data) => {
-      console.log('Backend:', data.toString());
-      if (data.toString().includes('Started NavasApplication')) {
+      const output = data.toString();
+      console.log('Backend:', output);
+
+      if (output.includes('Started NavasApplication')) {
+        if (mainWindow) {
+          mainWindow.webContents.send('backend-ready');
+        }
         resolve();
       }
     });
 
     backendProcess.stderr.on('data', (data) => {
-      console.error('Backend Error:', data.toString());
+      const errorOutput = data.toString();
+      console.error('Backend Error:', errorOutput);
     });
 
     backendProcess.on('error', (error) => {
@@ -114,6 +117,13 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error('Failed to start application:', error);
     createWindow();
+
+    // Notifique o frontend sobre erro
+    if (mainWindow) {
+      mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow.webContents.send('backend-error', error.message);
+      });
+    }
   }
 });
 
@@ -137,4 +147,4 @@ app.on('before-quit', () => {
 
 ipcMain.handle('get-backend-url', () => {
   return isDev ? 'http://localhost:8080' : 'http://localhost:8080';
-}); 
+});
