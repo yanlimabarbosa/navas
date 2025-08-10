@@ -1,7 +1,8 @@
 export class ImageProcessor {
-  static readonly SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+  static readonly SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif'];
 
   static getImagePath(baseFileName: string | undefined | null, prefix: string = 'imagens_produtos/'): string {
+    console.log('getImagePath', baseFileName, prefix);
     // Handle undefined or null baseFileName
     if (!baseFileName) {
       console.warn('Nome do arquivo de imagem não fornecido');
@@ -10,26 +11,41 @@ export class ImageProcessor {
     // Force to string
     const baseName = String(baseFileName);
     let imgPath = baseName;
+    
     if (!imgPath.includes('.')) {
-      // If no extension provided, try to find the first matching extension
-      for (const ext of ImageProcessor.SUPPORTED_EXTENSIONS) {
-        // Create a temporary image to check if the file exists
-        const img = new Image();
-        img.src = `${prefix}${baseName}${ext}`;
-        if (img.complete) {
-          imgPath = `${baseName}${ext}`;
-          break;
-        }
-      }
-      // If no extension found, default to .jpg
-      if (!imgPath.includes('.')) {
-        imgPath = `${baseName}.jpg`;
-      }
+      // For files without extension, we'll try different approaches:
+      // 1. First, return the path with .jpg extension as default
+      // 2. The browser will attempt to load it, and if it fails, 
+      //    the img.onerror handler in the component can try other extensions
+      imgPath = `${baseName}.jpg`;
     }
     
     let fullPath = `${prefix}${imgPath}`;
     if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
     return fullPath;
+  }
+
+  // Add a helper method for components to try multiple extensions
+  static getImageWithFallbacks(baseFileName: string | undefined | null, prefix: string = 'imagens_produtos/'): string[] {
+    if (!baseFileName) {
+      return [];
+    }
+    
+    const baseName = String(baseFileName);
+    
+    // If already has extension, return as-is
+    if (baseName.includes('.')) {
+      let fullPath = `${prefix}${baseName}`;
+      if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
+      return [fullPath];
+    }
+    
+    // Return all possible paths for fallback handling
+    return ImageProcessor.SUPPORTED_EXTENSIONS.map(ext => {
+      let fullPath = `${prefix}${baseName}${ext}`;
+      if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
+      return fullPath;
+    });
   }
 
   static validateImageDimensions(
@@ -113,7 +129,7 @@ export class ImageProcessor {
       // Always resize to ensure consistent dimensions
       const processedImage = await this.resizeImage(file, targetDimensions, 0.95);
       return processedImage;
-    } catch (error) {
+    } catch {
       throw new Error('Erro ao processar imagem. Verifique se o arquivo é válido.');
     }
   }

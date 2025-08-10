@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ProductGroup, Product } from "../types";
+import { ImageProcessor } from "../utils/imageProcessor";
 
 const productTitleClass =
   "text-[13px] font-bold text-[#6d6e71] text-center leading-tight uppercase tracking-tight break-words w-full";
@@ -28,21 +29,60 @@ const PriceDisplay = ({ price }: { price: number }) => {
   );
 };
 
-const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => (
-  <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
-    {src ? (
-      <img
-        src={src.startsWith("/") ? src.slice(1) : src}
-        alt={alt}
-        className="w-full h-full object-contain"
-      />
-    ) : (
-      <div className="w-full h-full  flex items-center justify-center rounded-[4px]">
-        <span className="text-[10px] text-gray-400">Sem Imagem</span>
-      </div>
-    )}
-  </div>
-);
+const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => {
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+
+  // Get fallback URLs if the image fails to load
+  const getFallbackSrcs = (originalSrc: string): string[] => {
+    if (!originalSrc) return [];
+    
+    // Extract base filename from the original src
+    const srcWithoutPrefix = originalSrc.replace('imagens_produtos/', '');
+    const baseNameWithoutExt = srcWithoutPrefix.replace(/\.[^/.]+$/, '');
+    
+    // Generate fallback paths
+    return ImageProcessor.getImageWithFallbacks(baseNameWithoutExt);
+  };
+
+  const handleImageError = () => {
+    if (!src) return;
+    
+    const fallbacks = getFallbackSrcs(src);
+    const nextIndex = fallbackIndex + 1;
+    
+    if (nextIndex < fallbacks.length) {
+      setCurrentSrc(fallbacks[nextIndex]);
+      setFallbackIndex(nextIndex);
+    } else {
+      // All fallbacks failed, show no image
+      setCurrentSrc(undefined);
+    }
+  };
+
+  // Reset when src prop changes
+  useEffect(() => {
+    setCurrentSrc(src);
+    setFallbackIndex(0);
+  }, [src]);
+
+  return (
+    <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
+      {currentSrc ? (
+        <img
+          src={currentSrc.startsWith("/") ? currentSrc.slice(1) : currentSrc}
+          alt={alt}
+          className="w-full h-full object-contain"
+          onError={handleImageError}
+        />
+      ) : (
+        <div className="w-full h-full  flex items-center justify-center rounded-[4px]">
+          <span className="text-[10px] text-gray-400">Sem Imagem</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ProductSpecsRow = ({ product }: { product: Product }) => {
   const formattedPrice = (product.price ?? 0).toFixed(2).replace(".", ",");
