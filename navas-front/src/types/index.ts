@@ -69,6 +69,9 @@ declare global {
   interface Window {
     electronAPI?: {
       getBackendUrl: () => Promise<string>;
+      onBackendReady: (callback: () => void) => void;
+      onBackendError: (callback: (error: string) => void) => void;
+      onBackendStatus: (callback: (status: string) => void) => void;
     };
   }
 }

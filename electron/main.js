@@ -11,6 +11,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
+    show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -30,6 +31,11 @@ function createWindow() {
   } else {
     mainWindow.loadFile(frontendIndex);
   }
+
+  // Show window immediately so splash screen is visible
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -86,11 +92,13 @@ function startBackend() {
       const output = data.toString();
       console.log('Backend:', output);
 
-      if (output.includes('Started NavasApplication')) {
-        if (mainWindow) {
+      // Send status updates to frontend
+      if (mainWindow && mainWindow.webContents) {
+        if (output.includes('Started NavasApplication') || output.includes('Started application') || output.includes('Application started')) {
+          mainWindow.webContents.send('backend-status', 'Aplicação iniciada com sucesso!');
           mainWindow.webContents.send('backend-ready');
+          resolve();
         }
-        resolve();
       }
     });
 
@@ -104,21 +112,81 @@ function startBackend() {
       reject(error);
     });
 
-    setTimeout(() => {
-      reject(new Error('Backend startup timeout'));
-    }, 30000);
+        // Health check function
+    const checkBackendHealth = async () => {
+      try {
+        const http = require('http');
+        return new Promise((resolve) => {
+          const req = http.get('http://localhost:8080/health', (res) => {
+                       if (res.statusCode === 200) {
+             console.log('Backend health check passed');
+             resolve(true);
+           } else {
+              resolve(false);
+            }
+          });
+          req.on('error', () => resolve(false));
+          req.setTimeout(2000, () => {
+            req.destroy();
+            resolve(false);
+          });
+        });
+      } catch (error) {
+        return false;
+      }
+    };
+
+         // Start health checks after 3 seconds
+     setTimeout(async () => {
+       let attempts = 0;
+       const maxAttempts = 20; // Increased from 8 to 20
+       const checkInterval = setInterval(async () => {
+         attempts++;
+         if (mainWindow && mainWindow.webContents) {
+           mainWindow.webContents.send('backend-status', `Iniciando aplicação`);
+         }
+         
+         const isHealthy = await checkBackendHealth();
+         if (isHealthy) {
+           clearInterval(checkInterval);
+           // Send final status and wait a bit before resolving
+           if (mainWindow && mainWindow.webContents) {
+             mainWindow.webContents.send('backend-status', 'Aplicação pronta!');
+           }
+           // Wait 1 second to show 100% progress before resolving
+           setTimeout(() => {
+             if (mainWindow && mainWindow.webContents) {
+               mainWindow.webContents.send('backend-ready');
+             }
+             resolve();
+           }, 1000);
+           return;
+         }
+         
+         if (attempts >= maxAttempts) {
+           clearInterval(checkInterval);
+           reject(new Error('Backend health check failed after multiple attempts'));
+         }
+       }, 1500);
+     }, 3000);
+
+         setTimeout(() => {
+       reject(new Error('Backend startup timeout - took longer than 35 seconds'));
+     }, 35000);
   });
 }
 
 app.whenReady().then(async () => {
+  // Create window first to show splash screen immediately
+  createWindow();
+  
   try {
     await startBackend();
-    createWindow();
+    // Backend started successfully - frontend will handle the transition
   } catch (error) {
     console.error('Failed to start application:', error);
-    createWindow();
-
-    // Notifique o frontend sobre erro
+    
+    // Notify frontend about error
     if (mainWindow) {
       mainWindow.webContents.once('did-finish-load', () => {
         mainWindow.webContents.send('backend-error', error.message);

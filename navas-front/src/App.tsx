@@ -1,10 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
+import { SplashScreen } from './components/SplashScreen';
 import { ThemeProvider } from './components/theme-provider';
 import { ThemeToggle } from './components/theme-toggle';
 import { Button } from './components/ui/button';
@@ -39,6 +40,8 @@ function isErrorWithMessage(error: unknown): error is { message: string } {
 function App() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isBackendReady, setIsBackendReady] = useState(false);
+  const [backendError, setBackendError] = useState<string | null>(null);
   const [view, setView] = useState<{
     state: 'dashboard' | 'upload' | 'preview';
     config?: FlyerConfig;
@@ -50,6 +53,30 @@ function App() {
   const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
   const [currentPage, setCurrentPage] = useState(0);
   const flyerRef = useRef<HTMLDivElement>(null);
+
+  // Handle backend events
+  useEffect(() => {
+    if (window.electronAPI) {
+      window.electronAPI.onBackendReady(() => {
+        setIsBackendReady(true);
+        setBackendError(null);
+      });
+
+      window.electronAPI.onBackendError((error: string) => {
+        setBackendError(error);
+        toast({
+          title: "Erro de Backend",
+          description: `Erro ao iniciar servidor: ${error}`,
+          variant: "destructive",
+        });
+      });
+    } else {
+      // Fallback for development without Electron
+      setTimeout(() => {
+        setIsBackendReady(true);
+      }, 2000);
+    }
+  }, [toast]);
 
   // Queries
   const { data: projectsResponse, isLoading: isLoadingProjects } = useQuery({
@@ -664,6 +691,25 @@ function App() {
         return null;
     }
   };
+
+  // Show splash screen while backend is not ready
+  if (!isBackendReady && !backendError) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          defaultTheme="light"
+          storageKey="navas-theme"
+        >
+          <SplashScreen
+            onBackendReady={() => setIsBackendReady(true)}
+            onBackendError={(error) => setBackendError(error)}
+          />
+          <Toaster />
+        </ThemeProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
