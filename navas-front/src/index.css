@@ -162,9 +162,6 @@
 
 /* Ensure text truncation works properly in export mode */
 .export-mode .truncate {
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
 }
 
 /* Ensure all text styling is preserved */

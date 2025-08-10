@@ -252,9 +252,6 @@ ${cssText}
     
     /* Ensure all critical styles are applied */
     .truncate { 
-      overflow: hidden !important; 
-      text-overflow: ellipsis !important; 
-      white-space: nowrap !important; 
     }
     .text-center { text-align: center !important; }
     .text-left { text-align: left !important; }

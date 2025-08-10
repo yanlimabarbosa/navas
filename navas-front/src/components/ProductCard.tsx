@@ -90,11 +90,11 @@ const ProductSpecsRow = ({ product }: { product: Product }) => {
 
   return (
     <div className="flex w-full h-[24px] items-center overflow-hidden rounded-md bg-black">
-      <div className="flex items-center bg-black pl-2 pr-2 h-[24px] flex-1 min-w-0">
-        <span className="text-white text-[13px] font-bold mr-2 min-w-[44px] text-left">
+      <div className="flex gap-2 items-center bg-black pl-2 pr-2 h-[24px] flex-1 min-w-0">
+        <span className="text-white text-[13px] font-bold text-left">
           {product.code}
         </span>
-        <span className="text-[#bdbdbd] text-[13px] font-semibold truncate text-center w-full">
+        <span className="text-[#bdbdbd] text-[13px] font-semibold whitespace-nowrap text-center w-full">
           {product.specifications}
         </span>
       </div>
@@ -172,9 +172,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         <div className="absolute bottom-2 right-0 flex flex-col items-end">
           {group.products.map((p) => (
             <div key={p.id} className="mb-1 last:mb-0">
-              <div className="flex items-center bg-black pl-2 pr-2 rounded-l-md h-[24px] w-[110px] justify-center">
-                <span className="text-white text-[13px] font-bold truncate text-center">
-                  {p.code} - {p.specifications}
+              <div className="flex items-center bg-black pl-2 pr-2 gap-4 rounded-l-md h-[24px] w-auto justify-center">
+                <span className="text-white text-[13px] font-bold whitespace-nowrap text-center">
+                  {p.code} - <span className="text-[#bdbdbd]">{p.specifications}</span>
                 </span>
               </div>
             </div>
