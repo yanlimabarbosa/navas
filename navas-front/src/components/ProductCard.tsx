@@ -199,28 +199,80 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
     </div>
   );
 
-  const renderDifferentPriceGroup = () => (
-    <div className="flex flex-col flex-1 h-full">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
-        <ImageBlock
-          src={group.image}
-          alt={
-            group.title ?? group.products[0]?.description ?? "Imagem do produto"
-          }
-        />
-      </div>
+  // --- UPDATE: Support up to 7 prices in "Different Prices" quadrant ---
+  const renderDifferentPriceGroup = () => {
+    // Dynamically adjust font size and spacing based on number of products
+    const count = group.products.length;
+    let priceFont = "text-[13px]";
+    let rowHeight = "h-[24px]";
+    let gap = "gap-2";
+    if (count >= 6) {
+      priceFont = "text-[11px]";
+      rowHeight = "h-[20px]";
+      gap = "gap-1";
+    } else if (count === 5) {
+      priceFont = "text-[12px]";
+      rowHeight = "h-[22px]";
+      gap = "gap-1.5";
+    }
 
-      <div className="w-full flex items-center justify-center mb-2">
-        <h3 className={productTitleClass}>{group.title}</h3>
-      </div>
+    return (
+      <div className="flex flex-col flex-1 h-full">
+        <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
+          <ImageBlock
+            src={group.image}
+            alt={
+              group.title ?? group.products[0]?.description ?? "Imagem do produto"
+            }
+          />
+        </div>
 
-      <div className="flex flex-col gap-2 w-full px-2 pb-2">
-        {group.products.slice(0, 3).map((p) => (
-          <ProductSpecsRow key={p.id} product={p} />
-        ))}
+        <div className="w-full flex items-center justify-center mb-2">
+          <h3 className={productTitleClass}>{group.title}</h3>
+        </div>
+
+        <div className={`flex flex-col ${gap} w-full px-2 pb-2`}>
+          {group.products.slice(0, 7).map((p) => (
+            <div
+              key={p.id}
+              className={`flex w-full ${rowHeight} items-center overflow-hidden rounded-md bg-black`}
+            >
+              <div className="flex gap-2 items-center bg-black pl-2 pr-2 flex-1 min-w-0">
+                <span className="text-white text-[12px] font-bold text-left">
+                  {p.code}
+                </span>
+                <span className="text-[#bdbdbd] text-[12px] font-semibold text-center w-full">
+                  {p.specifications}
+                </span>
+              </div>
+              <div
+                className="flex items-center justify-center bg-yellow-400 px-2 rounded-l-[6px]"
+                style={{
+                  minWidth: "65px",
+                  height: "100%",
+                }}
+              >
+                <span
+                  className={`font-black text-red-600 ${priceFont}`}
+                  style={{
+                    fontWeight: 900,
+                    color: "#e7010f",
+                    letterSpacing: "-0.025em",
+                    display: "inline-block",
+                    whiteSpace: "nowrap",
+                    textAlign: "center",
+                  }}
+                  data-price={`R$ ${(p.price ?? 0).toFixed(2).replace(".", ",")}`}
+                >
+                  {`R$ ${(p.price ?? 0).toFixed(2).replace(".", ",")}`}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     if (!group) return null;
