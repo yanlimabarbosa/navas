@@ -4,8 +4,6 @@ import { ProductGroup, FlyerConfig } from '../types';
 export const mockConfig: FlyerConfig = {
   id: 'config-1',
   title: 'Encarte de Ofertas',
-  headerText: 'Ofertas Válidas até 31/12/2024 ou enquanto durarem os estoques.',
-  footerText: 'Imagens meramente ilustrativas. Preços válidos para todas as lojas da rede.',
   backgroundColor: '#FFFFFF',
   primaryColor: '#d91e2b', // Red
   secondaryColor: '#2b3990', // Blue

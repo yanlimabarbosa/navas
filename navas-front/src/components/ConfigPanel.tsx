@@ -49,28 +49,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
               placeholder="Ex: Promoções de Janeiro"
             />
           </div>
-
-          <div>
-            <Label htmlFor="headerText">Texto do Cabeçalho</Label>
-            <Textarea
-              id="headerText"
-              value={config.headerText}
-              onChange={(e) => handleChange('headerText', e.target.value)}
-              placeholder="Ex: Ofertas válidas até 31/01/2025"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="footerText">Texto do Rodapé</Label>
-            <Textarea
-              id="footerText"
-              value={config.footerText}
-              onChange={(e) => handleChange('footerText', e.target.value)}
-              placeholder="Ex: Consulte condições especiais"
-              rows={2}
-            />
-          </div>
         </div>
       </div>
 
