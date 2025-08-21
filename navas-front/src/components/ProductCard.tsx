@@ -170,7 +170,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         
         {/* Absolutely positioned codes and specs */}
         <div className="absolute bottom-2 right-0 flex flex-col items-end">
-          {group.products.map((p) => (
+          {group.products.slice(0, 6).map((p) => ( // Limita a 6 produtos
             <div key={p.id} className="mb-1 last:mb-0">
               <div className="flex items-center bg-black pl-2 pr-2 gap-4 rounded-l-md h-[24px] w-auto justify-center">
                 <span className="text-white text-[13px] font-bold whitespace-nowrap text-center">
@@ -232,7 +232,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         </div>
 
         <div className={`flex flex-col ${gap} w-full px-2 pb-2`}>
-          {group.products.slice(0, 7).map((p) => (
+          {group.products.slice(0, 6).map((p) => (
             <div
               key={p.id}
               className={`flex w-full ${rowHeight} items-center overflow-hidden rounded-md bg-black`}
