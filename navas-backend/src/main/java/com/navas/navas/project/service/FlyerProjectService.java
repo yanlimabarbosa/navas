@@ -48,6 +48,7 @@ public class FlyerProjectService {
         List<ProductGroup> productGroups = request.getGroups().stream().map(groupDTO -> {
             ProductGroup group = new ProductGroup();
             group.setPosition(groupDTO.getPosition());
+            group.setFlyerPage(groupDTO.getFlyerPage());
             group.setGroupType(groupDTO.getGroupType());
             group.setTitle(groupDTO.getTitle());
             group.setImage(groupDTO.getImage());
@@ -128,6 +129,7 @@ public class FlyerProjectService {
             List<ProductGroup> newProductGroups = request.getGroups().stream().map(groupDTO -> {
                 ProductGroup group = new ProductGroup();
                 group.setPosition(groupDTO.getPosition());
+                group.setFlyerPage(groupDTO.getFlyerPage());
                 group.setGroupType(groupDTO.getGroupType());
                 group.setTitle(groupDTO.getTitle());
                 group.setImage(groupDTO.getImage());
