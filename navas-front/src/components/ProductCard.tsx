@@ -197,7 +197,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
               className={`flex w-full ${rowHeight} items-center overflow-hidden rounded-md bg-black`}
             >
               <div className="flex gap-2 items-center bg-black pl-2 pr-2 flex-1 min-w-0">
-                <span className="text-white text-[12px] font-bold text-left">
+                <span className="text-white text-[12px] font-bold text-left whitespace-nowrap">
                   {p.code}
                 </span>
                 <span className="text-[#bdbdbd] text-[12px] font-semibold text-center w-full">
