@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { ProductGroup, Product, ExcelData } from '../types';
+import { ProductGroup, Product, ExcelData, QUADRANTS_PER_FLYER } from '../types';
 import { ImageProcessor } from './imageProcessor';
 
 // Helper to determine the group type based on its products
@@ -39,8 +39,8 @@ function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | n
   if (!row.Posicao || typeof row.Posicao !== 'number') {
     return `Linha ${rowIndex + 2}: Posição inválida ou faltando`;
   }
-  if (row.Posicao < 1 || row.Posicao > 12) {
-    return `Linha ${rowIndex + 2}: Posição deve estar entre 1 e 12`;
+  if (row.Posicao < 1) {
+    return `Linha ${rowIndex + 2}: Posição deve ser maior que 0`;
   }
   if (!row.Codigo) {
     return `Linha ${rowIndex + 2}: Código do produto faltando`;
@@ -55,6 +55,16 @@ function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | n
     return `Linha ${rowIndex + 2}: Nome da imagem faltando`;
   }
   return null;
+}
+
+// Calculate flyer page for a given position
+function calculateFlyerPage(position: number): number {
+  return Math.ceil(position / QUADRANTS_PER_FLYER);
+}
+
+// Normalize position within a flyer (1-12 for each page)
+function normalizePosition(position: number): number {
+  return ((position - 1) % QUADRANTS_PER_FLYER) + 1;
 }
 
 export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
@@ -115,6 +125,7 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
         // Transform grouped data into ProductGroup[]
         const productGroups: ProductGroup[] = Object.entries(groupedByPosition).map(([position, rows]) => {
           const firstRow = rows[0];
+          const positionNumber = Number(position);
           
           const products: Product[] = rows.map((row, index) => ({
             id: `prod-${position}-${index}`,
@@ -130,7 +141,8 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
 
           return {
             id: `group-${position}`,
-            position: Number(position),
+            position: normalizePosition(positionNumber),
+            flyerPage: calculateFlyerPage(positionNumber),
             title: firstRow.Descricao,
             image: imagePath,
             products: products,
