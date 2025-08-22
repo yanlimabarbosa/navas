@@ -34,6 +34,9 @@ public class ProductGroup {
     @Column(nullable = false)
     private int position;
 
+    @Column(name = "flyer_page")
+    private Integer flyerPage;
+
     @OneToMany(mappedBy = "productGroup", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
