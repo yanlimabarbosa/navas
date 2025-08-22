@@ -47,6 +47,7 @@ public class FlyerProjectResponseDTO {
                         groupDTO.setTitle(group.getTitle());
                         groupDTO.setImage(group.getImage());
                         groupDTO.setPosition(group.getPosition());
+                        groupDTO.setFlyerPage(group.getFlyerPage());
                         
                         groupDTO.setProducts(group.getProducts().stream().map(product -> {
                             ProductDTO productDTO = new ProductDTO();
