@@ -1,86 +1,58 @@
 import domtoimage from 'dom-to-image';
 import jsPDF from 'jspdf';
 
-// Helper function to get flyer pages from element
 function getFlyerPages(element: HTMLElement): HTMLElement[] {
-  // If the element itself is a flyer page, return just it
   if (element.classList.contains('flyer-page') || element.hasAttribute('data-flyer-page')) {
     return [element];
   }
   
-  // Look for multiple flyer pages within the element
   const flyerContainers = element.querySelectorAll('.flyer-page, [data-flyer-page]');
   if (flyerContainers.length > 0) {
     return Array.from(flyerContainers) as HTMLElement[];
   }
   
-  // Fallback: if no explicit flyer pages, treat the whole element as one flyer
   return [element];
 }
 
-// Helper function to get clean flyer content for export (without UI elements)
 function getCleanFlyerContent(element: HTMLElement): HTMLElement[] {
-  // If exporting individual page, get the flyer content
   if (element.classList.contains('flyer-content')) {
     return [element];
   }
   
-  // If exporting all pages, get all flyer content elements
   const flyerContentElements = element.querySelectorAll('.flyer-content');
   if (flyerContentElements.length > 0) {
     return Array.from(flyerContentElements) as HTMLElement[];
   }
   
-  // Fallback: if no flyer content found, use the element itself
   return [element];
 }
 
-// DIRECT CAPTURE WITH DOM-TO-IMAGE - NO HTML GENERATION
 export async function exportElementAsImage(element: HTMLElement, filename: string = 'encarte.jpg'): Promise<void> {
-  console.log('🎯 DIRECT CAPTURE with DOM-TO-IMAGE - Starting image export without HTML generation');
-  
-  try {
-    // Wait for fonts and any pending renders
     await document.fonts.ready;
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Check if we have multiple flyers
     const flyerPages = getFlyerPages(element);
     const isMultipleFlyers = flyerPages.length > 1;
     
     if (isMultipleFlyers) {
-      console.log(`📄 Multiple flyers detected: ${flyerPages.length} pages`);
-      
-      // Export each flyer page as a separate image
       for (let i = 0; i < flyerPages.length; i++) {
         const pageElement = flyerPages[i];
         const pageNumber = i + 1;
         const pageFilename = filename.replace('.jpg', `-page-${pageNumber}.jpg`);
         
-        console.log(`📸 Exporting flyer page ${pageNumber}`);
         await exportSingleFlyerAsImage(pageElement, pageFilename);
       }
       
-      console.log('🎉 All flyer pages exported successfully');
       return;
     }
     
-    // Single flyer export (original logic)
     await exportSingleFlyerAsImage(element, filename);
-    
-  } catch (error) {
-    console.error('❌ Error in dom-to-image capture:', error);
-    throw error;
-  }
 }
 
-// Export a single flyer as image
 async function exportSingleFlyerAsImage(element: HTMLElement, filename: string): Promise<void> {
-  // Store current scroll position
   const scrollPosition = window.scrollY;
   const scrollXPosition = window.scrollX;
   
-  // Create a hidden container for export to prevent scroll issues
   const exportContainer = document.createElement('div');
   exportContainer.style.cssText = `
     position: fixed;
@@ -92,7 +64,6 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
     z-index: -9999;
   `;
   
-  // Clone the element to avoid DOM manipulation
   const clonedElement = element.cloneNode(true) as HTMLElement;
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
@@ -103,55 +74,24 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
     left: 0;
   `;
   
-  // Add to hidden container
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
   
   try {
-    // Get clean flyer content for export
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
     
-    // Debug: Log all price elements to see what's in the DOM
-    const priceElements = exportElement.querySelectorAll('span[style*="color: #e7010f"]');
-    console.log('🔍 Price elements found:', priceElements.length);
-    priceElements.forEach((el, index) => {
-      console.log(`Price ${index + 1}:`, el.textContent);
-      console.log(`Price ${index + 1} data-price:`, el.getAttribute('data-price'));
-    });
+    const A4_WIDTH_PX = 2480;
+    const A4_HEIGHT_PX = 3508;
     
-    // Additional debug: Check all spans with price data
-    const allPriceSpans = exportElement.querySelectorAll('span[data-price]');
-    console.log('🔍 All price spans found:', allPriceSpans.length);
-    allPriceSpans.forEach((el, index) => {
-      console.log(`Price span ${index + 1}:`, el.textContent, '- data-price:', el.getAttribute('data-price'));
-    });
-    
-    console.log('📸 Capturing cloned element with dom-to-image:', exportElement);
-    
-    // A4 DIMENSIONS - Standard paper size
-    const A4_WIDTH_PX = 2480;  // A4 width at 300 DPI (210mm)
-    const A4_HEIGHT_PX = 3508; // A4 height at 300 DPI (297mm)
-    
-    // Calculate scale factors to fill A4 completely
     const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
     const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
-    const scale = Math.max(scaleX, scaleY); // Use larger scale to fill completely
-    
-    console.log('📏 A4 scaling calculation:', {
-      elementWidth: exportElement.offsetWidth,
-      elementHeight: exportElement.offsetHeight,
-      A4_WIDTH: A4_WIDTH_PX,
-      A4_HEIGHT: A4_HEIGHT_PX,
-      scaleX: scaleX,
-      scaleY: scaleY,
-      finalScale: scale
-    });
+    const scale = Math.max(scaleX, scaleY);
     
     const dataUrl = await domtoimage.toJpeg(exportElement, {
       quality: 0.95,
-      width: A4_WIDTH_PX,   // Target A4 width
-      height: A4_HEIGHT_PX, // Target A4 height
+      width: A4_WIDTH_PX,
+      height: A4_HEIGHT_PX,
       bgcolor: '#ffffff',
       style: {
         transform: `scale(${scale})`,
@@ -161,9 +101,6 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
       }
     });
 
-    console.log('✅ Data URL created with dom-to-image');
-
-    // Download immediately
     const link = document.createElement('a');
     link.download = filename;
     link.href = dataUrl;
@@ -171,74 +108,50 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
     link.click();
     document.body.removeChild(link);
     
-    console.log('🎉 Image exported successfully with dom-to-image:', filename);
   } finally {
-    // Clean up hidden container
     document.body.removeChild(exportContainer);
     
-    // Ensure scroll position is maintained
     requestAnimationFrame(() => {
       window.scrollTo(scrollXPosition, scrollPosition);
     });
   }
 }
 
-// DIRECT CAPTURE WITH DOM-TO-IMAGE - NO HTML GENERATION
 export async function exportElementAsPDF(element: HTMLElement, filename: string = 'encarte.pdf'): Promise<void> {
-  console.log('🎯 DIRECT CAPTURE with DOM-TO-IMAGE - Starting PDF export without HTML generation');
-  
-  try {
-    // Wait for fonts and any pending renders
     await document.fonts.ready;
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Check if we have multiple flyers
     const flyerPages = getFlyerPages(element);
     const isMultipleFlyers = flyerPages.length > 1;
     
     if (isMultipleFlyers) {
-      console.log(`📄 Multiple flyers detected: ${flyerPages.length} pages`);
-      
-      // Create a single PDF with multiple pages
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Export each flyer page and add to PDF
       for (let i = 0; i < flyerPages.length; i++) {
         const pageElement = flyerPages[i];
         
         if (i > 0) {
-          pdf.addPage(); // Add new page for each flyer after the first
+          pdf.addPage();
         }
         
-        console.log(`📸 Adding flyer page ${i + 1} to PDF`);
         await addFlyerPageToPDF(pdf, pageElement);
       }
       
       pdf.save(filename);
-      console.log('🎉 Multi-page PDF exported successfully');
       return;
     }
     
-    // Single flyer export (original logic)
     await exportSingleFlyerAsPDF(element, filename);
-    
-  } catch (error) {
-    console.error('❌ Error in dom-to-image PDF capture:', error);
-    throw error;
-  }
 }
 
-// Export a single flyer as PDF
 async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): Promise<void> {
-  // Store current scroll position
   const scrollPosition = window.scrollY;
   const scrollXPosition = window.scrollX;
   
-  // Create a hidden container for export to prevent scroll issues
   const exportContainer = document.createElement('div');
   exportContainer.style.cssText = `
     position: fixed;
@@ -250,7 +163,6 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     z-index: -9999;
   `;
   
-  // Clone the element to avoid DOM manipulation
   const clonedElement = element.cloneNode(true) as HTMLElement;
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
@@ -261,48 +173,24 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     left: 0;
   `;
   
-  // Add to hidden container
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
   
   try {
-    // Get clean flyer content for export
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
     
-    // Debug: Log all price elements to see what's in the DOM
-    const priceElements = exportElement.querySelectorAll('span[style*="color: #e7010f"]');
-    console.log('🔍 PDF Price elements found:', priceElements.length);
-    priceElements.forEach((el, index) => {
-      console.log(`PDF Price ${index + 1}:`, el.textContent);
-      console.log(`PDF Price ${index + 1} data-price:`, el.getAttribute('data-price'));
-    });
+    const A4_WIDTH_PX = 2480; 
+    const A4_HEIGHT_PX = 3508;
     
-    console.log('📸 Capturing cloned element for PDF with dom-to-image:', exportElement);
-    
-    // A4 DIMENSIONS - Standard paper size for PDF
-    const A4_WIDTH_PX = 2480;  // A4 width at 300 DPI (210mm)
-    const A4_HEIGHT_PX = 3508; // A4 height at 300 DPI (297mm)
-    
-    // Calculate scale factors to fill A4 completely
     const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
     const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
-    const scale = Math.max(scaleX, scaleY); // Use larger scale to fill completely
-    
-    console.log('📏 A4 PDF scaling calculation:', {
-      elementWidth: exportElement.offsetWidth,
-      elementHeight: exportElement.offsetHeight,
-      A4_WIDTH: A4_WIDTH_PX,
-      A4_HEIGHT: A4_HEIGHT_PX,
-      scaleX: scaleX,
-      scaleY: scaleY,
-      finalScale: scale
-    });
+    const scale = Math.max(scaleX, scaleY);
     
     const dataUrl = await domtoimage.toJpeg(exportElement, {
       quality: 0.95,
-      width: A4_WIDTH_PX,   // Target A4 width
-      height: A4_HEIGHT_PX, // Target A4 height
+      width: A4_WIDTH_PX,
+      height: A4_HEIGHT_PX,
       bgcolor: '#ffffff',
       style: {
         transform: `scale(${scale})`,
@@ -312,9 +200,6 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
       }
     });
 
-    console.log('✅ Data URL created with dom-to-image');
-
-    // Create PDF directly from dom-to-image data
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -324,30 +209,24 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Since we're capturing at A4 dimensions, use full PDF page
     const imgWidth = pdfWidth;
     const imgHeight = pdfHeight;
-    const x = 0; // No centering needed - use full page
+    const x = 0;
     const y = 0;
 
     pdf.addImage(dataUrl, 'JPEG', x, y, imgWidth, imgHeight);
     pdf.save(filename);
     
-    console.log('🎉 PDF exported successfully with dom-to-image:', filename);
   } finally {
-    // Clean up hidden container
     document.body.removeChild(exportContainer);
     
-    // Ensure scroll position is maintained
     requestAnimationFrame(() => {
       window.scrollTo(scrollXPosition, scrollPosition);
     });
   }
 }
 
-// Add a flyer page to an existing PDF
 async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<void> {
-  // Create a hidden container for export to prevent scroll issues
   const exportContainer = document.createElement('div');
   exportContainer.style.cssText = `
     position: fixed;
@@ -359,7 +238,6 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
     z-index: -9999;
   `;
   
-  // Clone the element to avoid DOM manipulation
   const clonedElement = pageElement.cloneNode(true) as HTMLElement;
   clonedElement.style.cssText = `
     width: ${pageElement.offsetWidth}px;
@@ -370,20 +248,16 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
     left: 0;
   `;
   
-  // Add to hidden container
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
   
   try {
-    // Get clean flyer content for export
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
     
-    // A4 DIMENSIONS - Standard paper size for PDF
-    const A4_WIDTH_PX = 2480;  // A4 width at 300 DPI (210mm)
-    const A4_HEIGHT_PX = 3508; // A4 height at 300 DPI (297mm)
+    const A4_WIDTH_PX = 2480; 
+    const A4_HEIGHT_PX = 3508;
     
-    // Calculate scale factors to fill A4 completely
     const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
     const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
     const scale = Math.max(scaleX, scaleY);
@@ -404,7 +278,6 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Use full PDF page
     const imgWidth = pdfWidth;
     const imgHeight = pdfHeight;
     const x = 0;
@@ -412,17 +285,13 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
 
     pdf.addImage(dataUrl, 'JPEG', x, y, imgWidth, imgHeight);
   } finally {
-    // Clean up hidden container
     document.body.removeChild(exportContainer);
   }
 }
 
-// Helper: generate the standalone HTML string for the flyer
 export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promise<string> {
-  // Clone the flyer node
   const clone = flyerElement.cloneNode(true) as HTMLElement;
 
-  // Inline all images as Base64
   const imgElements = clone.querySelectorAll('img');
   const toDataURL = (img: HTMLImageElement) => new Promise<string>((resolve) => {
     if (!img.src || img.src.startsWith('data:')) return resolve(img.src);
@@ -446,7 +315,6 @@ export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promis
     img.setAttribute('src', dataUrl);
   }
 
-  // Collect all CSS from <style> and <link rel="stylesheet">
   let cssText = '';
   for (const styleSheet of Array.from(document.styleSheets)) {
     try {
@@ -456,13 +324,12 @@ export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promis
         cssText += rule.cssText + '\n';
       }
     } catch {
-      // Ignore CORS issues
+      console.log("error");
     }
   }
 
   cssText += `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');\n`;
 
-  // Build the HTML with enhanced styling
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -471,7 +338,6 @@ export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promis
 <title>Flyer Export</title>
 <style>
 ${cssText}
-    /* Export-specific styles */
     html, body { 
       height: 100%; 
       margin: 0; 
@@ -500,9 +366,6 @@ ${cssText}
       box-sizing: border-box;
     }
     
-    /* Ensure all critical styles are applied */
-    .truncate { 
-    }
     .text-center { text-align: center !important; }
     .text-left { text-align: left !important; }
     .text-right { text-align: right !important; }
@@ -549,16 +412,12 @@ ${cssText}
 
 export async function exportFlyerAsHTML(flyerElement: HTMLElement, filename: string = 'encarte.html'): Promise<string> {
   const html = await generateFlyerExportHTML(flyerElement);
-  // Log to console
-  console.log(html);
-  // Open preview
   const preview = window.open();
   if (preview) {
     preview.document.open();
     preview.document.write(html);
     preview.document.close();
   }
-  // Trigger download
   const blob = new Blob([html], { type: 'text/html' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -570,13 +429,9 @@ export async function exportFlyerAsHTML(flyerElement: HTMLElement, filename: str
 }
 
 export async function exportFlyerHTMLAsImage(flyerElement: HTMLElement, filename: string = 'encarte.jpg') {
-  // Legacy function - redirects to new dom-to-image method
-  console.log('Legacy HTML export called - redirecting to dom-to-image direct capture');
   return await exportElementAsImage(flyerElement, filename);
 }
 
 export async function exportFlyerHTMLAsPDF(flyerElement: HTMLElement, filename: string = 'encarte.pdf') {
-  // Legacy function - redirects to new dom-to-image method
-  console.log('Legacy HTML PDF export called - redirecting to dom-to-image direct capture');
   return await exportElementAsPDF(flyerElement, filename);
 } 

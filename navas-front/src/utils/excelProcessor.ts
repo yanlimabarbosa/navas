@@ -2,28 +2,23 @@ import * as XLSX from 'xlsx';
 import { ProductGroup, Product, ExcelData, QUADRANTS_PER_FLYER } from '../types';
 import { ImageProcessor } from './imageProcessor';
 
-// Helper to determine the group type based on its products
 function getGroupType(products: Product[]): 'single' | 'same-price' | 'different-price' {
   if (products.length === 1) {
     return 'single';
   }
-  // Check if all prices are the same
   const firstPrice = products[0].price;
   const allSamePrice = products.every(p => p.price === firstPrice);
   return allSamePrice ? 'same-price' : 'different-price';
 }
 
-// Check if a row is a phantom row (contains invisible characters or is essentially empty)
 function isPhantomRow(row: Partial<ExcelData>): boolean {
-  // Check if all main fields are invisible characters, empty, or null/undefined
-  const invisibleChar = '\u200B'; // Zero-width space character
+  const invisibleChar = '\u200B';
   
   const posicao = String(row.Posicao || '').trim();
   const codigo = String(row.Codigo || '').trim();
   const descricao = String(row.Descricao || '').trim();
   const preco = String(row.Preco || '').trim();
   
-  // If any of the main fields contains only invisible characters or is empty
   const isInvisibleOrEmpty = (value: string) => 
     !value || value === invisibleChar || value.replace(/[\u200B\s]/g, '') === '';
   
@@ -33,7 +28,6 @@ function isPhantomRow(row: Partial<ExcelData>): boolean {
          isInvisibleOrEmpty(preco);
 }
 
-// Validate required fields in Excel data
 function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | null {
   console.log(row);
   if (!row.Posicao || typeof row.Posicao !== 'number') {
@@ -57,12 +51,10 @@ function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | n
   return null;
 }
 
-// Calculate flyer page for a given position
 function calculateFlyerPage(position: number): number {
   return Math.ceil(position / QUADRANTS_PER_FLYER);
 }
 
-// Normalize position within a flyer (1-12 for each page)
 function normalizePosition(position: number): number {
   return ((position - 1) % QUADRANTS_PER_FLYER) + 1;
 }
@@ -160,52 +152,3 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
     reader.readAsArrayBuffer(file);
   });
 };
-
-export class ExcelProcessor {
-  static async processFile(file: File): Promise<Product[]> {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      
-      const jsonData: ExcelData[] = XLSX.utils.sheet_to_json(worksheet, {
-        range: 1 // Skip header row
-      });
-
-      return jsonData
-        .filter(row => row.Codigo && row.Descricao && row.Preco)
-        .map((row, index) => ({
-          id: `product-${index}`,
-          code: String(row.Codigo).trim(),
-          description: String(row.Descricao).trim(),
-          price: Number(row.Preco) || 0,
-        }));
-    } catch (error) {
-      console.error('Error processing Excel file:', error);
-      throw new Error('Erro ao processar arquivo Excel. Verifique se o formato está correto.');
-    }
-  }
-
-  static validateExcelStructure(file: File): Promise<boolean> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          
-          const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:C1');
-          const hasMinimumColumns = range.e.c >= 5; // Need 6 columns (0-indexed, so check for 5)
-          
-          resolve(hasMinimumColumns);
-        } catch {
-          resolve(false);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  }
-}

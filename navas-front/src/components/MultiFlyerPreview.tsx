@@ -83,7 +83,6 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
 
     return (
       <div ref={ref} className={`${className}`}>
-        {/* Global export buttons - centered and matching flyer width */}
         <Card className="w-full flex justify-center mb-12 flex-col items-center max-w-[1240px] mx-auto pt-6">
         <div className="text-center mb-6">
             <div className="flex items-center justify-center space-x-2 mb-2">
@@ -136,7 +135,6 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
                 className="flyer-page border border-border rounded-lg bg-background shadow-lg overflow-hidden max-w-fit"
                 data-flyer-page={pageNumber}
               >
-              {/* Page header with information and export buttons */}
               <div className="bg-muted/50 px-6 py-4 border-b border-border">
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -146,7 +144,6 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
                     {pageGroups.length} de {QUADRANTS_PER_FLYER} posições utilizadas
                   </p>
                   
-                  {/* Individual page export buttons */}
                   <div className="flex justify-center space-x-2">
                     <Button
                       onClick={() => handleExportPage(pageNumber, 'pdf')}
@@ -172,7 +169,6 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
                 </div>
               </div>
               
-              {/* Flyer content - this is what gets exported */}
               <div className="flyer-content">
                 <FlyerPreview
                   groups={pageGroups}

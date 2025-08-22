@@ -83,47 +83,6 @@ const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => {
     </div>
   );
 };
-
-const ProductSpecsRow = ({ product }: { product: Product }) => {
-  const formattedPrice = (product.price ?? 0).toFixed(2).replace(".", ",");
-  const fullPriceText = `R$ ${formattedPrice}`;
-
-  return (
-    <div className="flex w-full h-[24px] items-center overflow-hidden rounded-md bg-black">
-      <div className="flex gap-2 items-center bg-black pl-2 pr-2 h-[24px] flex-1 min-w-0">
-        <span className="text-white text-[13px] font-bold text-left">
-          {product.code}
-        </span>
-        <span className="text-[#bdbdbd] text-[13px] font-semibold whitespace-nowrap text-center w-full">
-          {product.specifications}
-        </span>
-      </div>
-      <div
-        className="flex items-center justify-center bg-yellow-400 px-2 h-[24px] rounded-l-[6px]"
-        style={{
-          minWidth: "75px",
-        }}
-      >
-        <span
-          className="text-sm font-black text-red-600"
-          style={{
-            fontSize: "13px",
-            fontWeight: "900",
-            color: "#e7010f",
-            letterSpacing: "-0.025em",
-            display: "inline-block",
-            whiteSpace: "nowrap",
-            textAlign: "center",
-          }}
-          data-price={fullPriceText}
-        >
-          {fullPriceText}
-        </span>
-      </div>
-    </div>
-  );
-};
-
 interface ProductCardProps {
   group: ProductGroup;
 }

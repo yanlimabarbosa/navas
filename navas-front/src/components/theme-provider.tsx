@@ -25,14 +25,13 @@ export function ThemeProvider({
   defaultTheme = "light",
   storageKey = "vite-ui-theme",
   ...props
-}: ThemeProviderProps) {
+}: Readonly<ThemeProviderProps>) {
   const [theme, setTheme] = React.useState<Theme>(() => {
     const savedTheme = localStorage.getItem(storageKey) as Theme
     if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
       return savedTheme
     }
     
-    // If no saved theme, check system preference
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       return "dark"
     }

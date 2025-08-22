@@ -28,7 +28,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
           fontSize: '16px',
         }}
       >
-        {/* Header */}
         <div
           className="relative text-white text-center"
           style={{
@@ -64,7 +63,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
           )}
         </div>
 
-        {/* Product Grid */}
         <div className="flex flex-col" style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}>
   <div className="grid grid-cols-4 grid-rows-3 gap-0 border-black" style={{ 
     width: '100%', 
@@ -95,7 +93,6 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(
 </div>
 
 
-        {/* Footer */}
         <div
           className="relative text-white"
           style={{

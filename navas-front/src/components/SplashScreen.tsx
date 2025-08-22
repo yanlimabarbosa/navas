@@ -12,7 +12,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
   const [dots, setDots] = useState('');
 
   useEffect(() => {
-    // Listen for backend events
     if (window.electronAPI) {
                    window.electronAPI.onBackendReady(() => {
                setStatus('Aplicação pronta!');
@@ -32,7 +31,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
         setProgress(prev => Math.min(prev + 10, 90));
       });
     } else {
-      // Fallback for development without Electron
       setTimeout(() => {
         setStatus('Modo de desenvolvimento - pulando splash screen');
         setProgress(100);
@@ -42,7 +40,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
       }, 2000);
     }
 
-    // Simulate progress while waiting
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 90) return prev;
@@ -50,7 +47,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
       });
     }, 1200);
 
-    // Animate dots
     const dotsInterval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? '' : prev + '.');
     }, 700);
@@ -65,7 +61,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
     <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
       <Card className="w-96 shadow-2xl border-0 bg-background/95 backdrop-blur-sm">
         <CardContent className="p-8 text-center">
-          {/* Logo */}
           <div className="mb-6">
             <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
               <span className="text-3xl font-bold text-white">N</span>
@@ -74,7 +69,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
             <p className="text-sm text-muted-foreground">Iniciando aplicação</p>
           </div>
 
-          {/* Progress Bar */}
           <div className="mb-6">
             <div className="w-full bg-muted rounded-full h-2 mb-2 overflow-hidden">
               <div 
@@ -89,7 +83,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
             </div>
           </div>
 
-          {/* Status */}
           <div className="mb-4">
             <p className="text-sm text-foreground">
               {status}
@@ -97,14 +90,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
             </p>
           </div>
 
-          {/* Loading Animation */}
           <div className="flex justify-center space-x-1">
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
             <div className="w-2 h-2 bg-secondary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
 
-          {/* Info */}
           <div className="mt-6 pt-4 border-t border-muted">
             <p className="text-xs text-muted-foreground">
               Aguardando servidor...

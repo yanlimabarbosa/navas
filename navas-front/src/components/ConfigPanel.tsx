@@ -4,7 +4,6 @@ import { Type, Image as ImageIcon, Palette } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 
 interface ConfigPanelProps {
@@ -31,7 +30,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
   return (
     <div className="space-y-4">
-      {/* Basic Information Section */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <Type className="w-4 h-4 text-primary" />
@@ -54,7 +52,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
       <Separator />
 
-      {/* Images Section - Second Row */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <ImageIcon className="w-4 h-4 text-primary" />
@@ -86,7 +83,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
       <Separator />
 
-      {/* Colors Section - Third Row */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <Palette className="w-4 h-4 text-primary" />

@@ -25,7 +25,6 @@ export class ImageProcessor {
     return fullPath;
   }
 
-  // Add a helper method for components to try multiple extensions
   static getImageWithFallbacks(baseFileName: string | undefined | null, prefix: string = 'imagens_produtos/'): string[] {
     if (!baseFileName) {
       return [];
@@ -33,34 +32,16 @@ export class ImageProcessor {
     
     const baseName = String(baseFileName);
     
-    // If already has extension, return as-is
     if (baseName.includes('.')) {
       let fullPath = `${prefix}${baseName}`;
       if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
       return [fullPath];
     }
     
-    // Return all possible paths for fallback handling
     return ImageProcessor.SUPPORTED_EXTENSIONS.map(ext => {
       let fullPath = `${prefix}${baseName}${ext}`;
       if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
       return fullPath;
-    });
-  }
-
-  static validateImageDimensions(
-    file: File, 
-    expectedDimensions: { width: number; height: number }
-  ): Promise<boolean> {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const isValid = img.width === expectedDimensions.width && 
-                       img.height === expectedDimensions.height;
-        resolve(isValid);
-      };
-      img.onerror = () => resolve(false);
-      img.src = URL.createObjectURL(file);
     });
   }
 
@@ -126,7 +107,6 @@ export class ImageProcessor {
     }
 
     try {
-      // Always resize to ensure consistent dimensions
       const processedImage = await this.resizeImage(file, targetDimensions, 0.95);
       return processedImage;
     } catch {
