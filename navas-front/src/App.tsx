@@ -4,6 +4,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
+import { MultiFlyerPreview } from './components/MultiFlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
 import { SplashScreen } from './components/SplashScreen';
 import { ThemeProvider } from './components/theme-provider';
@@ -425,7 +426,7 @@ function App() {
                     <div className="text-xs text-muted-foreground space-y-3">
                       <p><strong>Colunas obrigatórias (nesta ordem):</strong></p>
                       <ul className="list-disc list-inside ml-2 space-y-1">
-                        <li><strong>Posicao:</strong> Posição no encarte (1-12)</li>
+                        <li><strong>Posicao:</strong> Posição no encarte (1, 2, 3... - sem limite)</li>
                         <li><strong>Codigo:</strong> Código único do produto (ex: 1408177, ABC123)</li>
                         <li><strong>Preco:</strong> Preço do produto (ex: 10,50 ou 10.50)</li>
                         <li><strong>Descricao:</strong> Nome/descrição do produto</li>
@@ -434,7 +435,7 @@ function App() {
                       </ul>
                       
                       <div className="bg-background p-3 rounded">
-                        <p className="font-medium mb-2">🎯 Layout do Encarte (4x3 = 12 posições):</p>
+                        <p className="font-medium mb-2">🎯 Layout do Encarte (4x3 = 12 posições por página):</p>
                         <div className="grid grid-cols-4 gap-1 text-center text-xs font-mono">
                           <div className="bg-primary/10 p-1 rounded">1</div>
                           <div className="bg-primary/10 p-1 rounded">2</div>
@@ -534,6 +535,12 @@ function App() {
                       <div className="space-y-1">
                         <p className="text-xs italic">💡 <strong>Agrupamento automático:</strong></p>
                         <ul className="text-xs italic ml-4 space-y-1">
+                        </ul>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <p className="text-xs italic">💡 <strong>Agrupamento automático:</strong></p>
+                        <ul className="text-xs italic ml-4 space-y-1">
                           <li>• <strong>Mesmo preço:</strong> Produtos na mesma posição com preço igual</li>
                           <li>• <strong>Preços diferentes:</strong> Produtos na mesma posição com preços distintos</li>
                           <li>• <strong>Produto único:</strong> Um produto por posição</li>
@@ -606,81 +613,62 @@ function App() {
                 </Card>
               </div>
               {/* Preview Panel */}
-              <div className="w-full flex justify-center">
-                <Card className="w-fit">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Eye className="h-5 w-5" />
-                        <CardTitle>Visualização</CardTitle>
+              {view.groups && view.groups.length > 12 ? (
+                // Multi-flyer preview - no Card wrapper to allow independent containers
+                <div className="w-full">
+                  <MultiFlyerPreview
+                    ref={flyerRef}
+                    config={view.config!}
+                    groups={view.groups!}
+                  />
+                </div>
+              ) : (
+                // Single flyer preview - keep Card wrapper
+                <div className="w-full flex justify-center">
+                  <Card className="w-fit">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Eye className="h-5 w-5" />
+                          <CardTitle>Visualização</CardTitle>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => handleExport('pdf')}
+                            disabled={isExporting.pdf}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center space-x-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>{isExporting.pdf ? 'Exportando...' : 'PDF'}</span>
+                          </Button>
+                          <Button
+                            onClick={() => handleExport('jpg')}
+                            disabled={isExporting.jpg}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center space-x-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            <span>{isExporting.jpg ? 'Exportando...' : 'JPG'}</span>
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => handleExport('pdf')}
-                          disabled={isExporting.pdf}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>{isExporting.pdf ? 'Exportando...' : 'PDF'}</span>
-                        </Button>
-                        <Button
-                          onClick={() => handleExport('jpg')}
-                          disabled={isExporting.jpg}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>{isExporting.jpg ? 'Exportando...' : 'JPG'}</span>
-                        </Button>
-                        {/* HTML Export Button - Commented out per user request
-                        <Button
-                          onClick={async () => {
-                            if (flyerRef.current && view.config) {
-                              setIsExporting(prev => ({ ...prev, html: true }));
-                              try {
-                                const base = (view.config.title || 'encarte');
-                                const html = await exportFlyerAsHTML(flyerRef.current, base + '.html');
-                                await exportFlyerHTMLAsImage(flyerRef.current, base + '.jpg', html);
-                                await exportFlyerHTMLAsPDF(flyerRef.current, base + '.pdf', html);
-                              } catch (err) {
-                                console.error('Erro ao exportar HTML + Imagem + PDF:', err);
-                                toast({
-                                  title: 'Erro',
-                                  description: 'Erro ao exportar. Veja o console para detalhes.',
-                                  variant: 'destructive',
-                                });
-                              } finally {
-                                setIsExporting(prev => ({ ...prev, html: false }));
-                              }
-                            }
-                          }}
-                          disabled={isExporting.html}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center space-x-2"
-                        >
-                          <Download className="h-4 w-4" />
-                          <span>Exportar HTML + Imagem + PDF</span>
-                        </Button>
-                        */}
-                      </div>
-                    </div>
-                    <CardDescription>
-                      Preview do seu encarte promocional
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
+                      <CardDescription>
+                        Preview do seu encarte promocional
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
                       <FlyerPreview
                         ref={flyerRef}
                         config={view.config!}
                         groups={view.groups!}
                       />
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           </div>
         );
