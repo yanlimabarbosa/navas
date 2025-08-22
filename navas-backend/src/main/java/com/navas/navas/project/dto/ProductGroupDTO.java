@@ -10,5 +10,6 @@ public class ProductGroupDTO {
     private String title;
     private String image;
     private int position;
+    private Integer flyerPage;
     private List<ProductDTO> products;
 } 
