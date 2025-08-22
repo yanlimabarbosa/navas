@@ -14,13 +14,14 @@ export type ProductGroup = {
   products: Product[];
   groupType: 'single' | 'same-price' | 'different-price';
   position: number;
+  flyerPage?: number;
 };
 
 export interface FlyerConfig {
   id: string;
   title: string;
-  headerText: string;
-  footerText: string;
+  headerText?: string;
+  footerText?: string;
   headerImageUrl?: string;
   footerImageUrl?: string;
   backgroundColor: string;
@@ -28,6 +29,13 @@ export interface FlyerConfig {
   secondaryColor: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface FlyerPage {
+  id: string;
+  pageNumber: number;
+  groups: ProductGroup[];
+  config: FlyerConfig;
 }
 
 export interface SavedProject {
@@ -63,6 +71,8 @@ export const FOOTER_DIMENSIONS: ImageDimensions = {
   width: 1240,
   height: 204
 };
+
+export const QUADRANTS_PER_FLYER = 12;
 
 // Electron API types
 declare global {
