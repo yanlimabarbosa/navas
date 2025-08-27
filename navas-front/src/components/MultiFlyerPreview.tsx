@@ -15,7 +15,7 @@ interface MultiFlyerPreviewProps {
 export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewProps>(
   ({ groups, config, className = '' }, ref) => {
     const [exportingPages, setExportingPages] = useState<Record<number, { pdf: boolean; jpg: boolean }>>({});
-    const [exportingAll, setExportingAll] = useState<{ pdf: boolean; jpg: boolean }>({ pdf: false, jpg: false });
+    const [exportingAll, setExportingAll] = useState<{ pdf: boolean; jpg: boolean; 'split-pdf': boolean }>({ pdf: false, jpg: false, 'split-pdf': false });
     
     // Group products by flyer page
     const flyerPages = groups.reduce((acc, group) => {
@@ -59,7 +59,7 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
       }
     };
 
-    const handleExportAll = async (format: 'pdf' | 'jpg') => {
+    const handleExportAll = async (format: 'pdf' | 'jpg' | 'split-pdf') => {
       if (!ref || typeof ref === 'function') return;
       const containerElement = ref.current;
       if (!containerElement) return;
@@ -71,6 +71,14 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
         
         if (format === 'pdf') {
           await exportElementAsPDF(containerElement, `${fileName}.pdf`);
+        } else if (format === 'split-pdf') {
+          for (const pageNumber of sortedPages) {
+            const pageElement = document.querySelector(`[data-flyer-page="${pageNumber}"] .flyer-content`) as HTMLElement;
+            if (pageElement) {
+              const pageFileName = `${config.title || 'encarte'}-page-${pageNumber}.pdf`;
+              await exportElementAsPDF(pageElement, pageFileName);
+            }
+          }
         } else {
           await exportElementAsImage(containerElement, `${fileName}.jpg`);
         }
@@ -100,26 +108,36 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
             <p className="text-sm text-muted-foreground mb-4">
               Baixe todas as {sortedPages.length} página{sortedPages.length > 1 ? 's' : ''} do encarte de uma vez
             </p>
-            <div className="flex justify-center space-x-3">
+            <div className="flex justify-center space-x-4">
               <Button
                 onClick={() => handleExportAll('pdf')}
                 disabled={exportingAll.pdf}
-                variant="default"
+                variant="outline"
                 size="lg"
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-3 px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <FileText className="h-5 w-5" />
-                <span>{exportingAll.pdf ? 'Gerando PDF...' : 'PDF Completo'}</span>
+                <span className="font-medium">{exportingAll.pdf ? 'Gerando PDF...' : 'PDF Completo'}</span>
+              </Button>
+              <Button
+                onClick={() => handleExportAll('split-pdf')}
+                disabled={exportingAll['split-pdf']}
+                variant="outline"
+                size="lg"
+                className="flex items-center space-x-3 px-6 py-3 border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <FileText className="h-5 w-5" />
+                <span className="font-medium">{exportingAll['split-pdf'] ? 'Gerando PDFs...' : 'PDFs Separados'}</span>
               </Button>
               <Button
                 onClick={() => handleExportAll('jpg')}
                 disabled={exportingAll.jpg}
                 variant="outline"
                 size="lg"
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-3 px-6 py-3 border-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <Download className="h-5 w-5" />
-                <span>{exportingAll.jpg ? 'Gerando Imagens...' : 'JPGs Separados'}</span>
+                <span className="font-medium">{exportingAll.jpg ? 'Gerando Imagens...' : 'JPGs Separados'}</span>
               </Button>
             </div>
           </div>
