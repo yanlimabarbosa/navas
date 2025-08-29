@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { ProductGroup, Product } from "../types";
 import { ImageProcessor } from "../utils/imageProcessor";
 
@@ -30,59 +30,25 @@ const PriceDisplay = ({ price }: { price: number }) => {
 };
 
 const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => {
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-
-  // Get fallback URLs if the image fails to load
-  const getFallbackSrcs = (originalSrc: string): string[] => {
-    if (!originalSrc) return [];
-    
-    // Extract base filename from the original src
-    const srcWithoutPrefix = originalSrc.replace('imagens_produtos/', '');
-    const baseNameWithoutExt = srcWithoutPrefix.replace(/\.[^/.]+$/, '');
-    
-    // Generate fallback paths
-    return ImageProcessor.getImageWithFallbacks(baseNameWithoutExt);
-  };
-
-  const handleImageError = () => {
-    if (!src) return;
-    
-    const fallbacks = getFallbackSrcs(src);
-    const nextIndex = fallbackIndex + 1;
-    
-    if (nextIndex < fallbacks.length) {
-      setCurrentSrc(fallbacks[nextIndex]);
-      setFallbackIndex(nextIndex);
-    } else {
-      // All fallbacks failed, show no image
-      setCurrentSrc(undefined);
-    }
-  };
-
-  // Reset when src prop changes
-  useEffect(() => {
-    setCurrentSrc(src);
-    setFallbackIndex(0);
-  }, [src]);
-
+  const imagePath = src ? ImageProcessor.getImagePath(src) : undefined;
+  
   return (
     <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
-      {currentSrc ? (
+      {imagePath ? (
         <img
-          src={currentSrc.startsWith("/") ? currentSrc.slice(1) : currentSrc}
+          src={imagePath}
           alt={alt}
           className="w-full h-full object-contain"
-          onError={handleImageError}
         />
       ) : (
-        <div className="w-full h-full  flex items-center justify-center rounded-[4px]">
+        <div className="w-full h-full flex items-center justify-center rounded-[4px]">
           <span className="text-[10px] text-gray-400">Sem Imagem</span>
         </div>
       )}
     </div>
   );
 };
+
 interface ProductCardProps {
   group: ProductGroup;
 }
@@ -103,7 +69,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
       <div className="flex flex-col items-center px-2">
         <h3 className={`${productTitleClass} mb-1`}>{product.description}</h3>
         <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-t-[16px]"
+          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-[16px]"
           style={{
             minHeight: "35px",
             minWidth: "210px",
@@ -129,7 +95,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
         
         {/* Absolutely positioned codes and specs */}
         <div className="absolute bottom-2 right-0 flex flex-col items-end">
-          {group.products.slice(0, 6).map((p) => ( // Limita a 6 produtos
+          {group.products.slice(0, 6).map((p) => (
             <div key={p.id} className="mb-1 last:mb-0">
               <div className="flex items-center bg-black pl-2 pr-2 gap-4 rounded-l-md h-[24px] w-auto justify-center">
                 <span className="text-white text-[13px] font-bold whitespace-nowrap text-center">
@@ -144,7 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
       <div className="flex flex-col items-center px-2">
         <h3 className={`${productTitleClass} mb-1`}>{group.title}</h3>
         <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-t-[16px]"
+          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-[16px]"
           style={{
             minHeight: "35px",
             minWidth: "210px",
@@ -158,13 +124,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
     </div>
   );
 
-  // --- UPDATE: Support up to 7 prices in "Different Prices" quadrant ---
   const renderDifferentPriceGroup = () => {
-    // Dynamically adjust font size and spacing based on number of products
     const count = group.products.length;
     let priceFont = "text-[13px]";
     let rowHeight = "h-[24px]";
     let gap = "gap-2";
+    
     if (count >= 6) {
       priceFont = "text-[11px]";
       rowHeight = "h-[20px]";
