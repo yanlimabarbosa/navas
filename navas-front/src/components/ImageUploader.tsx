@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, X, Check, AlertCircle } from 'lucide-react';
 import { ImageProcessor } from '../utils/imageProcessor';
+import { processExcelFile } from '../utils/excelProcessor'; // ajuste se necessário
 
 interface ImageUploaderProps {
   label: string;
@@ -17,20 +18,46 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageChange,
   className = ''
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [dragActive, setDragActive] = useState(false);
 
-  const handleFileSelect = useCallback(async (file: File) => {
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
+  };
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      await handleFile(file);
+    }
+  }, []);
+
+  const handleFile = useCallback(async (file: File) => {
     setIsProcessing(true);
     setError('');
     setSuccess('');
 
     try {
-      const processedImageUrl = await ImageProcessor.processImageFile(file, targetDimensions);
-      onImageChange(processedImageUrl);
-      setSuccess('Imagem processada com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
+      // Verifica se é uma planilha
+      if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
+        const result = await processExcelFile(file);
+        // Faça algo com o resultado, por exemplo, setar no estado
+        console.log(result);
+      } else {
+        const processedImageUrl = await ImageProcessor.processImageFile(file, targetDimensions);
+        onImageChange(processedImageUrl);
+        setSuccess('Imagem processada com sucesso!');
+        setTimeout(() => setSuccess(''), 3000);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao processar imagem';
       setError(errorMessage);
@@ -39,20 +66,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   }, [targetDimensions, onImageChange]);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0 && files[0].type.startsWith('image/')) {
-      handleFileSelect(files[0]);
-    }
-  }, [handleFileSelect]);
-
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      handleFileSelect(files[0]);
+      handleFile(files[0]);
     }
-  }, [handleFileSelect]);
+  }, [handleFile]);
 
   const handleRemoveImage = () => {
     onImageChange(undefined);
@@ -85,12 +104,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       ) : (
         <div
           className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer"
+          onDragEnter={handleDrag}
+          onDragOver={handleDrag}
+          onDragLeave={handleDrag}
           onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
+          onClick={() => inputRef.current?.click()}
         >
           <input
+            ref={inputRef}
             type="file"
-            accept="image/jpeg,image/jpg,image/png"
+            accept="image/jpeg,image/jpg,image/png,.xlsx"
             onChange={handleFileInput}
             className="hidden"
             id={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
@@ -115,7 +138,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   {isProcessing ? 'Processando...' : 'Clique ou arraste uma imagem'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  JPG ou PNG
+                  JPG, PNG ou XLSX
                 </p>
               </div>
             </div>
