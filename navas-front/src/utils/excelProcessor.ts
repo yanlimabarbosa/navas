@@ -129,14 +129,14 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
 
           // Get image path, using product code as fallback if image name is not provided
           const imageName = String(firstRow.Imagem || firstRow.Codigo);
-          const imagePath = ImageProcessor.getImagePath(imageName);
+          // Note: imagePath will be resolved asynchronously in the component
 
           return {
             id: `group-${position}`,
             position: normalizePosition(positionNumber),
             flyerPage: calculateFlyerPage(positionNumber),
             title: firstRow.Descricao,
-            image: imagePath,
+            image: imageName, // Pass the image name instead of resolved path
             products: products,
             groupType: getGroupType(products),
           };
