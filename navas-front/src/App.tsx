@@ -34,11 +34,11 @@ function isErrorWithMessage(error: unknown): error is { message: string } {
 function App() {
   const { toast } = useToast();
   const [view, setView] = useState<{
-    state: 'dashboard' | 'upload' | 'preview';
+    state: 'upload' | 'preview';
     config?: FlyerConfig;
     groups?: ProductGroup[];
     products?: Product[];
-  }>({ state: 'dashboard' });
+  }>({ state: 'upload' });
 
   const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
   const flyerRef = useRef<HTMLDivElement>(null);
@@ -145,50 +145,12 @@ function App() {
   // Render Logic
   const renderContent = () => {
     switch (view.state) {
-      case 'dashboard':
-        return (
-          <div className="w-full min-h-screen px-4 py-8 bg-background">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-12">
-                <div className="text-center flex-1">
-                  <h1 className="text-4xl font-bold text-foreground mb-4">Navas Promoções</h1>
-                  <p className="text-xl text-muted-foreground">Crie e exporte encartes promocionais profissionais</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <ThemeToggle />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-8 mb-12">
-                <Card className="p-8 text-center hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView({ state: 'upload' })}>
-                  <CardContent className="p-0">
-                    <FileSpreadsheet className="h-16 w-16 mx-auto mb-4 text-primary" />
-                    <h3 className="text-xl font-semibold mb-2">Novo Encarte</h3>
-                    <p className="text-muted-foreground">Faça upload de uma planilha Excel para criar um novo encarte</p>
-                  </CardContent>
-                </Card>
-
-                {/* <Card className="p-8 text-center hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView({ state: 'preview' })}>
-                  <CardContent className="p-0">
-                    <Eye className="h-16 w-16 mx-auto mb-4 text-primary" />
-                    <h3 className="text-xl font-semibold mb-2">Visualizar</h3>
-                    <p className="text-muted-foreground">Visualize e configure encartes existentes</p>
-                  </CardContent>
-                </Card> */}
-              </div>
-            </div>
-          </div>
-        );
-
       case 'upload':
         return (
           <div className="w-full min-h-screen px-4 py-8 bg-background">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center">
-                  <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })} className="mr-4">
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
                   <div>
                     <h1 className="text-3xl font-bold text-foreground">Upload de Planilha</h1>
                     <p className="text-muted-foreground">Faça upload de uma planilha Excel para criar seu encarte</p>
@@ -355,7 +317,7 @@ function App() {
           <div className="w-full min-h-screen px-4 py-8 overflow-x-auto bg-background">
             <div className="flex items-center justify-between mb-8 max-w-[1640px] mx-auto">
               <div className="flex items-center space-x-4">
-                <Button variant="outline" size="icon" onClick={() => setView({ state: 'dashboard' })}>
+                <Button variant="outline" size="icon" onClick={() => setView({ state: 'upload' })}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>

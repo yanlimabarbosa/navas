@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onBackendStatus: (callback) => ipcRenderer.on('backend-status', (_event, message) => callback(message)),
   onImagensPath: (callback) => ipcRenderer.on('imagens-path', callback),
   getImagensPath: () => ipcRenderer.invoke('get-imagens-path'),
+  selectDirectory: () => ipcRenderer.invoke('select-directory'),
+  saveImageToDirectory: (dataURL, filename, directory) => ipcRenderer.invoke('save-image-to-directory', dataURL, filename, directory),
 });

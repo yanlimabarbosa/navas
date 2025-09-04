@@ -30,26 +30,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
-        <div className="flex items-center space-x-2">
-          <Type className="w-4 h-4 text-primary" />
-          <h3 className="text-base font-semibold">Informações Básicas</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="title">Título do Encarte</Label>
-            <Input
-              id="title"
-              type="text"
-              value={config.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              placeholder="Ex: Promoções de Janeiro"
-            />
-          </div>
-        </div>
-      </div>
-
       <Separator />
 
       <div className="space-y-3">

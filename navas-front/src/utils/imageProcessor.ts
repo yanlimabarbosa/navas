@@ -20,7 +20,14 @@ export class ImageProcessor {
       }
     }
     
-    // No fallback - must have config file
+    // Development mode fallback - use a mock path or disable image loading
+    if (import.meta.env.DEV) {
+      console.warn('Development mode: Images will not be loaded. Use Electron build for full functionality.');
+      this.imagesPrefix = 'mock://images/';
+      return;
+    }
+    
+    // Production mode - must have config file
     throw new Error('No shared folder configured. Check navas-caminho-imagens.txt file.');
   }
 
@@ -37,6 +44,18 @@ export class ImageProcessor {
     const baseName = String(imageName);
     const extension = baseName.includes('.') ? '' : '.jpg';
     const fullPath = `${this.imagesPrefix}${baseName}${extension}`;
+    
+    // In development mode with mock path, return a placeholder
+    if (import.meta.env.DEV && this.imagesPrefix.startsWith('mock://')) {
+      return `data:image/svg+xml;base64,${btoa(`
+        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="200" fill="#f3f4f6"/>
+          <text x="100" y="100" text-anchor="middle" dy=".3em" font-family="Arial" font-size="12" fill="#6b7280">
+            ${baseName}
+          </text>
+        </svg>
+      `)}`;
+    }
     
     return fullPath;
   }

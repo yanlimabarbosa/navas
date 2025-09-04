@@ -1,10 +1,11 @@
-import React, { forwardRef, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { FlyerPreview } from './FlyerPreview';
 import { ProductGroup, FlyerConfig, QUADRANTS_PER_FLYER } from '../types';
 import { Button } from './ui/button';
 import { Download, Eye, FileText } from 'lucide-react';
-import { exportElementAsImage, exportElementAsPDF } from '../utils/htmlExporter';
+import { exportElementAsImage, exportElementAsPDF, exportElementAsImageBatch, exportElementAsPDFBatch } from '../utils/htmlExporter';
 import { Card } from './ui/card';
+import { useToast } from '../hooks/use-toast';
 
 interface MultiFlyerPreviewProps {
   groups: ProductGroup[];
@@ -14,6 +15,7 @@ interface MultiFlyerPreviewProps {
 
 export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewProps>(
   ({ groups, config, className = '' }, ref) => {
+    const { toast } = useToast();
     const [exportingPages, setExportingPages] = useState<Record<number, { pdf: boolean; jpg: boolean }>>({});
     const [exportingAll, setExportingAll] = useState<{ pdf: boolean; jpg: boolean; 'split-pdf': boolean }>({ pdf: false, jpg: false, 'split-pdf': false });
     
@@ -72,18 +74,34 @@ export const MultiFlyerPreview = forwardRef<HTMLDivElement, MultiFlyerPreviewPro
         if (format === 'pdf') {
           await exportElementAsPDF(containerElement, `${fileName}.pdf`);
         } else if (format === 'split-pdf') {
-          for (const pageNumber of sortedPages) {
-            const pageElement = document.querySelector(`[data-flyer-page="${pageNumber}"] .flyer-content`) as HTMLElement;
-            if (pageElement) {
-              const pageFileName = `${config.title || 'encarte'}-page-${pageNumber}.pdf`;
-              await exportElementAsPDF(pageElement, pageFileName);
-            }
-          }
+          // Use batch export for PDFs to allow directory selection
+          await exportElementAsPDFBatch(containerElement, fileName);
+          
+          toast({
+            title: "✅ Sucesso!",
+            description: `Todos os PDFs foram salvos na pasta selecionada!`,
+            variant: "default",
+          });
         } else {
-          await exportElementAsImage(containerElement, `${fileName}.jpg`);
+          // Use batch export for JPGs to allow directory selection
+          await exportElementAsImageBatch(containerElement, fileName);
+          
+          toast({
+            title: "✅ Sucesso!",
+            description: `Todas as imagens foram salvas na pasta selecionada!`,
+            variant: "default",
+          });
         }
       } catch (error) {
         console.error(`Error exporting all pages as ${format}:`, error);
+        
+        const errorMessage = error instanceof Error ? error.message : `Erro ao exportar ${format.toUpperCase()}`;
+        
+        toast({
+          title: "❌ Erro",
+          description: errorMessage,
+          variant: "destructive",
+        });
       } finally {
         setExportingAll(prev => ({ ...prev, [format]: false }));
       }

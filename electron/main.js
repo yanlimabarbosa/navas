@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
@@ -90,4 +90,44 @@ ipcMain.handle('get-backend-url', () => {
 // Handle request for images path
 ipcMain.handle('get-imagens-path', () => {
   return getImagensProdutosPath();
+});
+
+// Handle directory selection for batch export
+ipcMain.handle('select-directory', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Selecionar pasta para salvar as imagens'
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error selecting directory:', error);
+    return null;
+  }
+});
+
+// Handle saving image to specific directory
+ipcMain.handle('save-image-to-directory', async (event, dataURL, filename, directory) => {
+  try {
+    // Remove data URL prefix
+    const base64Data = dataURL.replace(/^data:image\/[a-z]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Create full file path
+    const filePath = path.join(directory, filename);
+    
+    // Write file
+    fs.writeFileSync(filePath, buffer);
+    
+    console.log(`Image saved to: ${filePath}`);
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error('Error saving image:', error);
+    return { success: false, error: error.message };
+  }
 });

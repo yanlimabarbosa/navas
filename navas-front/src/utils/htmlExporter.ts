@@ -49,6 +49,253 @@ export async function exportElementAsImage(element: HTMLElement, filename: strin
     await exportSingleFlyerAsImage(element, filename);
 }
 
+export async function exportElementAsImageBatch(element: HTMLElement, baseFilename: string = 'encarte'): Promise<void> {
+    await document.fonts.ready;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const flyerPages = getFlyerPages(element);
+    console.log('🔍 Batch export: Found', flyerPages.length, 'flyer pages');
+    
+    if (flyerPages.length === 0) {
+      throw new Error('No flyer pages found to export');
+    }
+    
+    // For single page, use regular export
+    if (flyerPages.length === 1) {
+      console.log('📄 Single page detected, using regular export');
+      await exportSingleFlyerAsImage(flyerPages[0], `${baseFilename}.jpg`);
+      return;
+    }
+    
+    // For multiple pages, we need to handle batch export
+    console.log('📚 Multiple pages detected, attempting batch export');
+    
+    // First, let's try to use Electron API if available for directory selection
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      console.log('🔌 Electron API detected, trying directory selection');
+      try {
+        const electronAPI = (window as any).electronAPI;
+        if (typeof electronAPI.selectDirectory === 'function') {
+          console.log('📂 Opening directory selection dialog');
+          const selectedDirectory = await electronAPI.selectDirectory();
+          
+          if (selectedDirectory) {
+            console.log('✅ Directory selected:', selectedDirectory);
+            // Export all pages to the selected directory
+            for (let i = 0; i < flyerPages.length; i++) {
+              const pageElement = flyerPages[i];
+              const pageNumber = i + 1;
+              const pageFilename = `${baseFilename}-page-${pageNumber}.jpg`;
+              
+              console.log(`💾 Saving page ${pageNumber}: ${pageFilename}`);
+              // Use a custom export function that saves to the selected directory
+              await exportSingleFlyerAsImageToDirectory(pageElement, pageFilename, selectedDirectory);
+            }
+            console.log('🎉 Batch export completed successfully');
+            return;
+          } else {
+            console.log('❌ Directory selection cancelled by user');
+            throw new Error('Directory selection was cancelled. Please try again and select a folder to save the images.');
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to use Electron directory selection:', error);
+        throw error; // Re-throw to show user the error message
+      }
+    }
+    
+    console.log('🌐 Browser mode detected - Electron API not available');
+    throw new Error('Batch export is only available in the desktop app. Please use the desktop version for this feature, or export pages individually.');
+}
+
+export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename: string = 'encarte'): Promise<void> {
+    await document.fonts.ready;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const flyerPages = getFlyerPages(element);
+    console.log('🔍 PDF Batch export: Found', flyerPages.length, 'flyer pages');
+    
+    if (flyerPages.length === 0) {
+      throw new Error('No flyer pages found to export');
+    }
+    
+    // For single page, use regular export
+    if (flyerPages.length === 1) {
+      console.log('📄 Single page detected, using regular PDF export');
+      await exportSingleFlyerAsPDF(flyerPages[0], `${baseFilename}.pdf`);
+      return;
+    }
+    
+    // For multiple pages, we need to handle batch export
+    console.log('📚 Multiple pages detected, attempting PDF batch export');
+    
+    // First, let's try to use Electron API if available for directory selection
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      console.log('🔌 Electron API detected, trying directory selection for PDFs');
+      try {
+        const electronAPI = (window as any).electronAPI;
+        if (typeof electronAPI.selectDirectory === 'function') {
+          console.log('📂 Opening directory selection dialog for PDFs');
+          const selectedDirectory = await electronAPI.selectDirectory();
+          
+          if (selectedDirectory) {
+            console.log('✅ Directory selected for PDFs:', selectedDirectory);
+            // Export all pages to the selected directory
+            for (let i = 0; i < flyerPages.length; i++) {
+              const pageElement = flyerPages[i];
+              const pageNumber = i + 1;
+              const pageFilename = `${baseFilename}-page-${pageNumber}.pdf`;
+              
+              console.log(`💾 Saving PDF page ${pageNumber}: ${pageFilename}`);
+              // Use a custom export function that saves to the selected directory
+              await exportSingleFlyerAsPDFToDirectory(pageElement, pageFilename, selectedDirectory);
+            }
+            console.log('🎉 PDF batch export completed successfully');
+            return;
+          } else {
+            console.log('❌ Directory selection cancelled by user');
+            throw new Error('Directory selection was cancelled. Please try again and select a folder to save the PDFs.');
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to use Electron directory selection for PDFs:', error);
+        throw error; // Re-throw to show user the error message
+      }
+    }
+    
+    console.log('🌐 Browser mode detected - Electron API not available for PDFs');
+    throw new Error('PDF batch export is only available in the desktop app. Please use the desktop version for this feature, or export pages individually.');
+}
+
+async function exportSingleFlyerAsImageToDirectory(element: HTMLElement, filename: string, directory: string): Promise<void> {
+  const scrollPosition = window.scrollY;
+  const scrollXPosition = window.scrollX;
+  
+  const exportContainer = document.createElement('div');
+  exportContainer.style.cssText = `
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: ${element.offsetWidth}px;
+    height: ${element.offsetHeight}px;
+    background: white;
+    z-index: -1;
+  `;
+  
+  const clonedElement = element.cloneNode(true) as HTMLElement;
+  exportContainer.appendChild(clonedElement);
+  document.body.appendChild(exportContainer);
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const dataUrl = await domtoimage.toJpeg(exportContainer, {
+      quality: 0.95,
+      bgcolor: '#ffffff',
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+    });
+    
+    // Use Electron API to save to specific directory
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      const electronAPI = (window as any).electronAPI;
+      if (typeof electronAPI.saveImageToDirectory === 'function') {
+        await electronAPI.saveImageToDirectory(dataUrl, filename, directory);
+        return;
+      }
+    }
+    
+    // Fallback to regular download if Electron API not available
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+    
+  } finally {
+    document.body.removeChild(exportContainer);
+    window.scrollTo(scrollXPosition, scrollPosition);
+  }
+}
+
+async function exportSingleFlyerAsPDFToDirectory(element: HTMLElement, filename: string, directory: string): Promise<void> {
+  const scrollPosition = window.scrollY;
+  const scrollXPosition = window.scrollX;
+  
+  const exportContainer = document.createElement('div');
+  exportContainer.style.cssText = `
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: ${element.offsetWidth}px;
+    height: ${element.offsetHeight}px;
+    background: white;
+    z-index: -1;
+  `;
+  
+  const clonedElement = element.cloneNode(true) as HTMLElement;
+  exportContainer.appendChild(clonedElement);
+  document.body.appendChild(exportContainer);
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Generate PDF using the same logic as the existing exportSingleFlyerAsPDF function
+    const A4_WIDTH_PX = 794; // A4 width in pixels at 96 DPI
+    const A4_HEIGHT_PX = 1123; // A4 height in pixels at 96 DPI
+    
+    const exportElement = exportContainer;
+    const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
+    const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
+    const scale = Math.max(scaleX, scaleY);
+    
+    const dataUrl = await domtoimage.toJpeg(exportElement, {
+      quality: 0.95,
+      width: A4_WIDTH_PX,
+      height: A4_HEIGHT_PX,
+      bgcolor: '#ffffff',
+      style: {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: exportElement.offsetWidth + 'px',
+        height: exportElement.offsetHeight + 'px'
+      }
+    });
+    
+    // Convert JPEG to PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    pdf.addImage(dataUrl, 'JPEG', 0, 0, 210, 297); // A4 dimensions in mm
+    
+    // Get PDF as data URL
+    const pdfDataUrl = pdf.output('datauristring');
+    
+    // Use Electron API to save to specific directory
+    if (typeof window !== 'undefined' && (window as any).electronAPI) {
+      const electronAPI = (window as any).electronAPI;
+      if (typeof electronAPI.saveImageToDirectory === 'function') {
+        // Convert PDF data URL to base64
+        const base64Data = pdfDataUrl.split(',')[1];
+        await electronAPI.saveImageToDirectory(`data:application/pdf;base64,${base64Data}`, filename, directory);
+        return;
+      }
+    }
+    
+    // Fallback to regular download if Electron API not available
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = pdfDataUrl;
+    link.click();
+    
+  } finally {
+    document.body.removeChild(exportContainer);
+    window.scrollTo(scrollXPosition, scrollPosition);
+  }
+}
+
 async function exportSingleFlyerAsImage(element: HTMLElement, filename: string): Promise<void> {
   const scrollPosition = window.scrollY;
   const scrollXPosition = window.scrollX;
