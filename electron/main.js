@@ -37,7 +37,11 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      enableRemoteModule: false,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: true, // Enable File System Access API
+      webSecurity: false // Allow File System Access API
     },
     icon: path.join(__dirname, '../assets/navas-logo.jpg'),
     title: 'Navas Promoções'
@@ -66,6 +70,10 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// Enable File System Access API
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('enable-file-system-access-api');
 
 app.whenReady().then(() => {
   createWindow();

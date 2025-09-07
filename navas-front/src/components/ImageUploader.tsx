@@ -123,6 +123,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <label
             htmlFor={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
             className="cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center space-y-2">
               {isProcessing ? (

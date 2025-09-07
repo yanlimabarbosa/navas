@@ -41,6 +41,7 @@ function App() {
   }>({ state: 'upload' });
 
   const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
+  const [dragActive, setDragActive] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
 
   // Initialize images path
@@ -49,7 +50,7 @@ function App() {
       try {
         await ImageProcessor.initializeImagesPrefix();
       } catch (error) {
-        console.error('Failed to initialize images:', error);
+        console.error('Falha ao inicializar imagens:', error);
       }
     };
     
@@ -58,10 +59,7 @@ function App() {
 
 
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = useCallback(async (file: File) => {
     try {
       const groups = await processExcelFile(file);
       const products = groups.flatMap(group => group.products);
@@ -94,6 +92,29 @@ function App() {
         variant: "destructive",
       });
     }
+  }, [toast]);
+
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(e.type === 'dragenter' || e.type === 'dragover');
+  };
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  }, [processFile]);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
   };
 
   const handleConfigChange = useCallback((newConfig: FlyerConfig) => {
@@ -163,10 +184,31 @@ function App() {
 
               <Card className="p-8">
                 <CardContent className="p-0">
-                  <div className="text-center">
+                  <div 
+                    className={`text-center border-2 border-dashed rounded-lg p-8 transition-colors ${
+                      dragActive 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'
+                    }`}
+                    role="button"
+                    tabIndex={0}
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        document.getElementById('file-upload')?.click();
+                      }
+                    }}
+                  >
                     <FileSpreadsheet className="h-16 w-16 mx-auto mb-4 text-primary" />
                     <h3 className="text-xl font-semibold mb-2">Selecione sua planilha Excel</h3>
-                    <p className="text-muted-foreground mb-6">Arraste e solte ou clique para selecionar</p>
+                    <p className="text-muted-foreground mb-6">
+                      {dragActive ? 'Solte o arquivo aqui' : 'Arraste e solte ou clique para selecionar'}
+                    </p>
                     
                     <input
                       type="file"
@@ -175,7 +217,7 @@ function App() {
                       className="hidden"
                       id="file-upload"
                     />
-                    <label htmlFor="file-upload">
+                    <label htmlFor="file-upload" onClick={(e) => e.stopPropagation()}>
                       <Button asChild className="cursor-pointer">
                         <span>
                           <Upload className="h-4 w-4 mr-2" />

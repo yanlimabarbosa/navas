@@ -1,5 +1,26 @@
 import domtoimage from 'dom-to-image';
 import jsPDF from 'jspdf';
+import JSZip from 'jszip';
+
+// File System Access API types
+interface FileSystemDirectoryHandle {
+  getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;
+}
+
+interface FileSystemFileHandle {
+  createWritable(): Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream {
+  write(data: Uint8Array): Promise<void>;
+  close(): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    showDirectoryPicker(): Promise<FileSystemDirectoryHandle>;
+  }
+}
 
 function getFlyerPages(element: HTMLElement): HTMLElement[] {
   if (element.classList.contains('flyer-page') || element.hasAttribute('data-flyer-page')) {
@@ -38,7 +59,7 @@ export async function exportElementAsImage(element: HTMLElement, filename: strin
       for (let i = 0; i < flyerPages.length; i++) {
         const pageElement = flyerPages[i];
         const pageNumber = i + 1;
-        const pageFilename = filename.replace('.jpg', `-page-${pageNumber}.jpg`);
+        const pageFilename = filename.replace('.jpg', `-${pageNumber}.jpg`);
         
         await exportSingleFlyerAsImage(pageElement, pageFilename);
       }
@@ -57,7 +78,7 @@ export async function exportElementAsImageBatch(element: HTMLElement, baseFilena
     console.log('🔍 Batch export: Found', flyerPages.length, 'flyer pages');
     
     if (flyerPages.length === 0) {
-      throw new Error('No flyer pages found to export');
+      throw new Error('Nenhuma página do encarte foi encontrada para exportar');
     }
     
     // For single page, use regular export
@@ -67,45 +88,72 @@ export async function exportElementAsImageBatch(element: HTMLElement, baseFilena
       return;
     }
     
-    // For multiple pages, we need to handle batch export
-    console.log('📚 Multiple pages detected, attempting batch export');
-    
-    // First, let's try to use Electron API if available for directory selection
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-      console.log('🔌 Electron API detected, trying directory selection');
+    // Try to use File System Access API for folder selection
+    if ('showDirectoryPicker' in window) {
+      console.log('📂 Using File System Access API for folder selection');
       try {
-        const electronAPI = (window as any).electronAPI;
-        if (typeof electronAPI.selectDirectory === 'function') {
-          console.log('📂 Opening directory selection dialog');
-          const selectedDirectory = await electronAPI.selectDirectory();
+        const directoryHandle = await window.showDirectoryPicker();
+        
+        for (let i = 0; i < flyerPages.length; i++) {
+          const pageElement = flyerPages[i];
+          const pageNumber = i + 1;
+          const pageFilename = `${baseFilename}-${pageNumber}.jpg`;
           
-          if (selectedDirectory) {
-            console.log('✅ Directory selected:', selectedDirectory);
-            // Export all pages to the selected directory
-            for (let i = 0; i < flyerPages.length; i++) {
-              const pageElement = flyerPages[i];
-              const pageNumber = i + 1;
-              const pageFilename = `${baseFilename}-page-${pageNumber}.jpg`;
-              
-              console.log(`💾 Saving page ${pageNumber}: ${pageFilename}`);
-              // Use a custom export function that saves to the selected directory
-              await exportSingleFlyerAsImageToDirectory(pageElement, pageFilename, selectedDirectory);
-            }
-            console.log('🎉 Batch export completed successfully');
-            return;
-          } else {
-            console.log('❌ Directory selection cancelled by user');
-            throw new Error('Directory selection was cancelled. Please try again and select a folder to save the images.');
-          }
+          console.log(`💾 Saving page ${pageNumber}: ${pageFilename}`);
+          
+          // Generate image data for this page
+          const imageData = await generateImageData(pageElement);
+          
+          // Create file in selected directory
+          const fileHandle = await directoryHandle.getFileHandle(pageFilename, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(imageData);
+          await writable.close();
         }
+        
+        console.log('🎉 Files saved to selected folder successfully');
+        return;
       } catch (error) {
-        console.warn('Failed to use Electron directory selection:', error);
-        throw error; // Re-throw to show user the error message
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('❌ Folder selection cancelled by user');
+          throw new Error('Seleção de pasta foi cancelada. Tente novamente e selecione uma pasta para salvar as imagens.');
+        }
+        console.warn('Failed to use File System Access API:', error);
+        // Fall back to ZIP method
       }
     }
     
-    console.log('🌐 Browser mode detected - Electron API not available');
-    throw new Error('Batch export is only available in the desktop app. Please use the desktop version for this feature, or export pages individually.');
+    // Fallback: Create ZIP file with all pages
+    console.log('📚 Using ZIP fallback for batch export');
+    const zip = new JSZip();
+    
+    for (let i = 0; i < flyerPages.length; i++) {
+      const pageElement = flyerPages[i];
+      const pageNumber = i + 1;
+      const pageFilename = `${baseFilename}-${pageNumber}.jpg`;
+      
+      console.log(`💾 Processing page ${pageNumber}: ${pageFilename}`);
+      
+      // Generate image data for this page
+      const imageData = await generateImageData(pageElement);
+      
+      // Add to ZIP
+      zip.file(pageFilename, imageData, { binary: true });
+    }
+    
+    // Generate and download ZIP file
+    console.log('🗜️ Generating ZIP file...');
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    // Download the ZIP file
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${baseFilename}-pages.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('🎉 ZIP batch export completed successfully');
 }
 
 export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename: string = 'encarte'): Promise<void> {
@@ -116,7 +164,7 @@ export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename
     console.log('🔍 PDF Batch export: Found', flyerPages.length, 'flyer pages');
     
     if (flyerPages.length === 0) {
-      throw new Error('No flyer pages found to export');
+      throw new Error('Nenhuma página do encarte foi encontrada para exportar');
     }
     
     // For single page, use regular export
@@ -126,98 +174,95 @@ export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename
       return;
     }
     
-    // For multiple pages, we need to handle batch export
-    console.log('📚 Multiple pages detected, attempting PDF batch export');
-    
-    // First, let's try to use Electron API if available for directory selection
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-      console.log('🔌 Electron API detected, trying directory selection for PDFs');
+    // Try to use File System Access API for folder selection
+    if ('showDirectoryPicker' in window) {
+      console.log('📂 Using File System Access API for PDF folder selection');
       try {
-        const electronAPI = (window as any).electronAPI;
-        if (typeof electronAPI.selectDirectory === 'function') {
-          console.log('📂 Opening directory selection dialog for PDFs');
-          const selectedDirectory = await electronAPI.selectDirectory();
+        const directoryHandle = await window.showDirectoryPicker();
+        
+        for (let i = 0; i < flyerPages.length; i++) {
+          const pageElement = flyerPages[i];
+          const pageNumber = i + 1;
+          const pageFilename = `${baseFilename}-${pageNumber}.pdf`;
           
-          if (selectedDirectory) {
-            console.log('✅ Directory selected for PDFs:', selectedDirectory);
-            // Export all pages to the selected directory
-            for (let i = 0; i < flyerPages.length; i++) {
-              const pageElement = flyerPages[i];
-              const pageNumber = i + 1;
-              const pageFilename = `${baseFilename}-page-${pageNumber}.pdf`;
-              
-              console.log(`💾 Saving PDF page ${pageNumber}: ${pageFilename}`);
-              // Use a custom export function that saves to the selected directory
-              await exportSingleFlyerAsPDFToDirectory(pageElement, pageFilename, selectedDirectory);
-            }
-            console.log('🎉 PDF batch export completed successfully');
-            return;
-          } else {
-            console.log('❌ Directory selection cancelled by user');
-            throw new Error('Directory selection was cancelled. Please try again and select a folder to save the PDFs.');
-          }
+          console.log(`💾 Saving PDF page ${pageNumber}: ${pageFilename}`);
+          
+          // Generate PDF data for this page
+          const pdfData = await generatePDFData(pageElement);
+          
+          // Create file in selected directory
+          const fileHandle = await directoryHandle.getFileHandle(pageFilename, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(pdfData);
+          await writable.close();
         }
-      } catch (error) {
-        console.warn('Failed to use Electron directory selection for PDFs:', error);
-        throw error; // Re-throw to show user the error message
-      }
-    }
-    
-    console.log('🌐 Browser mode detected - Electron API not available for PDFs');
-    throw new Error('PDF batch export is only available in the desktop app. Please use the desktop version for this feature, or export pages individually.');
-}
-
-async function exportSingleFlyerAsImageToDirectory(element: HTMLElement, filename: string, directory: string): Promise<void> {
-  const scrollPosition = window.scrollY;
-  const scrollXPosition = window.scrollX;
-  
-  const exportContainer = document.createElement('div');
-  exportContainer.style.cssText = `
-    position: fixed;
-    top: -9999px;
-    left: -9999px;
-    width: ${element.offsetWidth}px;
-    height: ${element.offsetHeight}px;
-    background: white;
-    z-index: -1;
-  `;
-  
-  const clonedElement = element.cloneNode(true) as HTMLElement;
-  exportContainer.appendChild(clonedElement);
-  document.body.appendChild(exportContainer);
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    const dataUrl = await domtoimage.toJpeg(exportContainer, {
-      quality: 0.95,
-      bgcolor: '#ffffff',
-      width: element.offsetWidth,
-      height: element.offsetHeight,
-    });
-    
-    // Use Electron API to save to specific directory
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-      const electronAPI = (window as any).electronAPI;
-      if (typeof electronAPI.saveImageToDirectory === 'function') {
-        await electronAPI.saveImageToDirectory(dataUrl, filename, directory);
+        
+        console.log('🎉 PDF files saved to selected folder successfully');
         return;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('❌ Folder selection cancelled by user');
+          throw new Error('Seleção de pasta foi cancelada. Tente novamente e selecione uma pasta para salvar os PDFs.');
+        }
+        console.warn('Failed to use File System Access API for PDFs:', error);
+        // Fall back to ZIP method
       }
     }
     
-    // Fallback to regular download if Electron API not available
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = dataUrl;
-    link.click();
+    // Fallback: Create ZIP file with all PDF pages
+    console.log('📚 Using ZIP fallback for PDF batch export');
+    const zip = new JSZip();
     
-  } finally {
-    document.body.removeChild(exportContainer);
-    window.scrollTo(scrollXPosition, scrollPosition);
-  }
+    for (let i = 0; i < flyerPages.length; i++) {
+      const pageElement = flyerPages[i];
+      const pageNumber = i + 1;
+      const pageFilename = `${baseFilename}-${pageNumber}.pdf`;
+      
+      console.log(`💾 Processing PDF page ${pageNumber}: ${pageFilename}`);
+      
+      // Generate PDF data for this page
+      const pdfData = await generatePDFData(pageElement);
+      
+      // Add to ZIP
+      zip.file(pageFilename, pdfData, { binary: true });
+    }
+    
+    // Generate and download ZIP file
+    console.log('🗜️ Generating PDF ZIP file...');
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    // Download the ZIP file
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${baseFilename}-pages.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('🎉 PDF ZIP batch export completed successfully');
 }
 
-async function exportSingleFlyerAsPDFToDirectory(element: HTMLElement, filename: string, directory: string): Promise<void> {
+// Helper function to check for missing images
+function checkForMissingImages(element: HTMLElement): string[] {
+  const missingImages: string[] = [];
+  const imgElements = element.querySelectorAll('img');
+  
+  imgElements.forEach((img) => {
+    if (img.src && !img.src.startsWith('data:') && !img.src.startsWith('blob:')) {
+      // Check if image failed to load by looking at the complete property
+      // and also checking if the image has any visible dimensions
+      if (img.complete === false || 
+          (img.naturalWidth === 0 && img.naturalHeight === 0 && img.complete === true)) {
+        missingImages.push(img.src);
+      }
+    }
+  });
+  
+  return missingImages;
+}
+
+// Helper function to generate image data as binary
+async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
   const scrollPosition = window.scrollY;
   const scrollXPosition = window.scrollX;
   
@@ -228,22 +273,33 @@ async function exportSingleFlyerAsPDFToDirectory(element: HTMLElement, filename:
     left: -9999px;
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
-    background: white;
-    z-index: -1;
+    overflow: hidden;
+    z-index: -9999;
   `;
   
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.style.cssText = `
+    width: ${element.offsetWidth}px;
+    height: ${element.offsetHeight}px;
+    transform: none;
+    position: relative;
+    top: 0;
+    left: 0;
+  `;
+  
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
   
   try {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    const cleanContent = getCleanFlyerContent(clonedElement);
+    const exportElement = cleanContent[0];
     
-    // Generate PDF using the same logic as the existing exportSingleFlyerAsPDF function
-    const A4_WIDTH_PX = 794; // A4 width in pixels at 96 DPI
-    const A4_HEIGHT_PX = 1123; // A4 height in pixels at 96 DPI
+    // Note: Image checking removed as it was causing false positives
+    // The domtoimage library will handle missing images gracefully
     
-    const exportElement = exportContainer;
+    const A4_WIDTH_PX = 2480;
+    const A4_HEIGHT_PX = 3508;
+    
     const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
     const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
     const scale = Math.max(scaleX, scaleY);
@@ -260,39 +316,105 @@ async function exportSingleFlyerAsPDFToDirectory(element: HTMLElement, filename:
         height: exportElement.offsetHeight + 'px'
       }
     });
+
+    // Convert data URL to binary
+    const base64Data = dataUrl.split(',')[1];
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
     
-    // Convert JPEG to PDF
+  } finally {
+    document.body.removeChild(exportContainer);
+    requestAnimationFrame(() => {
+      window.scrollTo(scrollXPosition, scrollPosition);
+    });
+  }
+}
+
+// Helper function to generate PDF data as binary
+async function generatePDFData(element: HTMLElement): Promise<Uint8Array> {
+  const scrollPosition = window.scrollY;
+  const scrollXPosition = window.scrollX;
+  
+  const exportContainer = document.createElement('div');
+  exportContainer.style.cssText = `
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: ${element.offsetWidth}px;
+    height: ${element.offsetHeight}px;
+    overflow: hidden;
+    z-index: -9999;
+  `;
+  
+  const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.style.cssText = `
+    width: ${element.offsetWidth}px;
+    height: ${element.offsetHeight}px;
+    transform: none;
+    position: relative;
+    top: 0;
+    left: 0;
+  `;
+  
+  exportContainer.appendChild(clonedElement);
+  document.body.appendChild(exportContainer);
+  
+  try {
+    const cleanContent = getCleanFlyerContent(clonedElement);
+    const exportElement = cleanContent[0];
+    
+    // Note: Image checking removed as it was causing false positives
+    // The domtoimage library will handle missing images gracefully
+    
+    const A4_WIDTH_PX = 2480; 
+    const A4_HEIGHT_PX = 3508;
+    
+    const scaleX = A4_WIDTH_PX / exportElement.offsetWidth;
+    const scaleY = A4_HEIGHT_PX / exportElement.offsetHeight;
+    const scale = Math.max(scaleX, scaleY);
+    
+    const dataUrl = await domtoimage.toJpeg(exportElement, {
+      quality: 0.95,
+      width: A4_WIDTH_PX,
+      height: A4_HEIGHT_PX,
+      bgcolor: '#ffffff',
+      style: {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: exportElement.offsetWidth + 'px',
+        height: exportElement.offsetHeight + 'px'
+      }
+    });
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    pdf.addImage(dataUrl, 'JPEG', 0, 0, 210, 297); // A4 dimensions in mm
+    const imgWidth = pdfWidth;
+    const imgHeight = pdfHeight;
+    const x = 0;
+    const y = 0;
+
+    pdf.addImage(dataUrl, 'JPEG', x, y, imgWidth, imgHeight);
     
-    // Get PDF as data URL
-    const pdfDataUrl = pdf.output('datauristring');
-    
-    // Use Electron API to save to specific directory
-    if (typeof window !== 'undefined' && (window as any).electronAPI) {
-      const electronAPI = (window as any).electronAPI;
-      if (typeof electronAPI.saveImageToDirectory === 'function') {
-        // Convert PDF data URL to base64
-        const base64Data = pdfDataUrl.split(',')[1];
-        await electronAPI.saveImageToDirectory(`data:application/pdf;base64,${base64Data}`, filename, directory);
-        return;
-      }
-    }
-    
-    // Fallback to regular download if Electron API not available
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = pdfDataUrl;
-    link.click();
+    // Get PDF as binary data
+    const pdfOutput = pdf.output('arraybuffer');
+    return new Uint8Array(pdfOutput);
     
   } finally {
     document.body.removeChild(exportContainer);
-    window.scrollTo(scrollXPosition, scrollPosition);
+    requestAnimationFrame(() => {
+      window.scrollTo(scrollXPosition, scrollPosition);
+    });
   }
 }
 
@@ -327,6 +449,9 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
   try {
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
+    
+    // Note: Image checking removed as it was causing false positives
+    // The domtoimage library will handle missing images gracefully
     
     const A4_WIDTH_PX = 2480;
     const A4_HEIGHT_PX = 3508;
@@ -427,6 +552,9 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
     
+    // Note: Image checking removed as it was causing false positives
+    // The domtoimage library will handle missing images gracefully
+    
     const A4_WIDTH_PX = 2480; 
     const A4_HEIGHT_PX = 3508;
     
@@ -501,6 +629,9 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
   try {
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
+    
+    // Note: Image checking removed as it was causing false positives
+    // The domtoimage library will handle missing images gracefully
     
     const A4_WIDTH_PX = 2480; 
     const A4_HEIGHT_PX = 3508;
