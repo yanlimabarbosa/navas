@@ -13,13 +13,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
 
   useEffect(() => {
     if (window.electronAPI) {
-                   window.electronAPI.onBackendReady(() => {
-               setStatus('Aplicação pronta!');
-               setProgress(100);
-               setTimeout(() => {
-                 onBackendReady();
-               }, 1000);
-             });
+      window.electronAPI.onBackendReady(() => {
+        setStatus('Aplicação pronta!');
+        setProgress(100);
+        setTimeout(() => {
+          onBackendReady();
+        }, 1000);
+      });
 
       window.electronAPI.onBackendError((error: string) => {
         setStatus(`Erro ao iniciar backend: ${error}`);
@@ -28,7 +28,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
 
       window.electronAPI.onBackendStatus((status: string) => {
         setStatus(status);
-        setProgress(prev => Math.min(prev + 10, 90));
+        setProgress((prev) => Math.min(prev + 10, 90));
       });
     } else {
       setTimeout(() => {
@@ -41,14 +41,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
     }
 
     const progressInterval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 90) return prev;
         return prev + Math.random() * 15;
       });
     }, 1200);
 
     const dotsInterval = setInterval(() => {
-      setDots(prev => prev.length >= 3 ? '' : prev + '.');
+      setDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
     }, 700);
 
     return () => {
@@ -71,16 +71,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
 
           <div className="mb-6">
             <div className="w-full bg-muted rounded-full h-2 mb-2 overflow-hidden">
-              <div 
+              <div
                 className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-700 ease-out relative"
                 style={{ width: `${progress}%` }}
               >
                 <div className="absolute inset-0 bg-white/20 animate-pulse" />
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {Math.round(progress)}% completo
-            </div>
+            <div className="text-xs text-muted-foreground">{Math.round(progress)}% completo</div>
           </div>
 
           <div className="mb-4">
@@ -97,12 +95,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
           </div>
 
           <div className="mt-6 pt-4 border-t border-muted">
-            <p className="text-xs text-muted-foreground">
-              Aguardando servidor...
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              v1.0.0 • Aplicação Navas
-            </p>
+            <p className="text-xs text-muted-foreground">Aguardando servidor...</p>
+            <p className="text-xs text-muted-foreground mt-1">v1.0.0 • Aplicação Navas</p>
           </div>
         </CardContent>
       </Card>

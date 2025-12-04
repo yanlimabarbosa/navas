@@ -5,14 +5,7 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Toaster } from './components/ui/toaster';
 import { useToast } from './hooks/use-toast';
-import { 
-  Download, 
-  FileSpreadsheet, 
-  Upload, 
-  Settings, 
-  Eye,
-  ArrowLeft
-} from 'lucide-react';
+import { Download, FileSpreadsheet, Upload, Settings, Eye, ArrowLeft } from 'lucide-react';
 import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { MultiFlyerPreview } from './components/MultiFlyerPreview';
@@ -20,7 +13,6 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
 import { ImageProcessor } from './utils/imageProcessor';
-
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
   return (
@@ -40,7 +32,11 @@ function App() {
     products?: Product[];
   }>({ state: 'upload' });
 
-  const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({ pdf: false, jpg: false, html: false });
+  const [isExporting, setIsExporting] = useState<{ pdf: boolean; jpg: boolean; html: boolean }>({
+    pdf: false,
+    jpg: false,
+    html: false,
+  });
   const [dragActive, setDragActive] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
 
@@ -53,46 +49,47 @@ function App() {
         console.error('Falha ao inicializar imagens:', error);
       }
     };
-    
+
     initializeImages();
   }, []);
 
+  const processFile = useCallback(
+    async (file: File) => {
+      try {
+        const groups = await processExcelFile(file);
+        const products = groups.flatMap((group) => group.products);
 
-
-  const processFile = useCallback(async (file: File) => {
-    try {
-      const groups = await processExcelFile(file);
-      const products = groups.flatMap(group => group.products);
-      
-      setView({
-        state: 'preview',
-        config: {
-          id: 'config-1',
-          title: 'Encarte de Ofertas',
-          backgroundColor: '#FFFFFF',
-          primaryColor: '#d91e2b',
-          secondaryColor: '#2b3990',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          headerImageUrl: '',
-          footerImageUrl: '',
-        },
-        groups,
-        products,
-      });
-    } catch (error: unknown) {
-      console.error('Erro ao processar arquivo:', error);
-      let message = "Erro ao processar arquivo. Verifique se o formato está correto.";
-      if (isErrorWithMessage(error)) {
-        message = error.message;
+        setView({
+          state: 'preview',
+          config: {
+            id: 'config-1',
+            title: 'Encarte de Ofertas',
+            backgroundColor: '#FFFFFF',
+            primaryColor: '#d91e2b',
+            secondaryColor: '#2b3990',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            headerImageUrl: '',
+            footerImageUrl: '',
+          },
+          groups,
+          products,
+        });
+      } catch (error: unknown) {
+        console.error('Erro ao processar arquivo:', error);
+        let message = 'Erro ao processar arquivo. Verifique se o formato está correto.';
+        if (isErrorWithMessage(error)) {
+          message = error.message;
+        }
+        toast({
+          title: 'Erro',
+          description: message,
+          variant: 'destructive',
+        });
       }
-      toast({
-        title: "Erro",
-        description: message,
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -100,16 +97,19 @@ function App() {
     setDragActive(e.type === 'dragenter' || e.type === 'dragover');
   };
 
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      await processFile(file);
-    }
-  }, [processFile]);
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        await processFile(file);
+      }
+    },
+    [processFile]
+  );
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -118,7 +118,7 @@ function App() {
   };
 
   const handleConfigChange = useCallback((newConfig: FlyerConfig) => {
-    setView(prev => ({
+    setView((prev) => ({
       ...prev,
       config: newConfig,
     }));
@@ -126,40 +126,40 @@ function App() {
 
   const handleExport = async (format: 'jpg' | 'pdf') => {
     if (!flyerRef.current) {
-      console.error("❌ Referência do Flyer não encontrada.");
+      console.error('❌ Referência do Flyer não encontrada.');
       return;
     }
-    
+
     console.log('🚀 Starting export:', format.toUpperCase());
-    setIsExporting(prev => ({ ...prev, [format]: true }));
+    setIsExporting((prev) => ({ ...prev, [format]: true }));
 
     try {
       const element = flyerRef.current;
       const fileName = view.state === 'preview' ? view.config?.title.replace(/ /g, '_') : 'encarte';
-      
+
       console.log('📋 Element to export:', element);
       console.log('📁 Filename:', fileName);
-      
+
       if (format === 'pdf') {
         await exportElementAsPDF(element, `${fileName}.pdf`);
       } else {
         await exportElementAsImage(element, `${fileName}.jpg`);
       }
-      
+
       toast({
-        title: "✅ Sucesso!",
+        title: '✅ Sucesso!',
         description: `Encarte exportado como ${format.toUpperCase()} com sucesso!`,
-        variant: "success",
+        variant: 'success',
       });
     } catch (error) {
       console.error(`❌ Erro ao exportar para ${format.toUpperCase()}:`, error);
       toast({
-        title: "❌ Erro",
+        title: '❌ Erro',
         description: `Houve um erro ao tentar exportar para ${format.toUpperCase()}.`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
-      setIsExporting(prev => ({ ...prev, [format]: false }));
+      setIsExporting((prev) => ({ ...prev, [format]: false }));
     }
   };
 
@@ -184,10 +184,10 @@ function App() {
 
               <Card className="p-8">
                 <CardContent className="p-0">
-                  <div 
+                  <div
                     className={`text-center border-2 border-dashed rounded-lg p-8 transition-colors ${
-                      dragActive 
-                        ? 'border-primary bg-primary/5' 
+                      dragActive
+                        ? 'border-primary bg-primary/5'
                         : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'
                     }`}
                     role="button"
@@ -209,7 +209,7 @@ function App() {
                     <p className="text-muted-foreground mb-6">
                       {dragActive ? 'Solte o arquivo aqui' : 'Arraste e solte ou clique para selecionar'}
                     </p>
-                    
+
                     <input
                       type="file"
                       accept=".xlsx,.xls"
@@ -230,16 +230,30 @@ function App() {
                   <div className="bg-muted/50 p-4 rounded-lg mt-8">
                     <h4 className="font-medium mb-2 text-sm">📋 Formato esperado da planilha:</h4>
                     <div className="text-xs text-muted-foreground space-y-3">
-                      <p><strong>Colunas obrigatórias (nesta ordem):</strong></p>
+                      <p>
+                        <strong>Colunas obrigatórias (nesta ordem):</strong>
+                      </p>
                       <ul className="list-disc list-inside ml-2 space-y-1">
-                        <li><strong>Posicao:</strong> Posição no encarte (1, 2, 3... - sem limite)</li>
-                        <li><strong>Codigo:</strong> Código único do produto (ex: 1408177, ABC123)</li>
-                        <li><strong>Preco:</strong> Preço do produto (ex: 10,50 ou 10.50)</li>
-                        <li><strong>Descricao:</strong> Nome/descrição do produto</li>
-                        <li><strong>Diferencial:</strong> Especificações técnicas (ex: 5MX19MM, 3/8")</li>
-                        <li><strong>Imagem:</strong> Nome do arquivo de imagem (sem extensão)</li>
+                        <li>
+                          <strong>Posicao:</strong> Posição no encarte (1, 2, 3... - sem limite)
+                        </li>
+                        <li>
+                          <strong>Codigo:</strong> Código único do produto (ex: 1408177, ABC123)
+                        </li>
+                        <li>
+                          <strong>Preco:</strong> Preço do produto (ex: 10,50 ou 10.50)
+                        </li>
+                        <li>
+                          <strong>Descricao:</strong> Nome/descrição do produto
+                        </li>
+                        <li>
+                          <strong>Diferencial:</strong> Especificações técnicas (ex: 5MX19MM, 3/8")
+                        </li>
+                        <li>
+                          <strong>Imagem:</strong> Nome do arquivo de imagem (sem extensão)
+                        </li>
                       </ul>
-                      
+
                       <div className="bg-background p-3 rounded">
                         <p className="font-medium mb-2">🎯 Layout do Encarte (4x3 = 12 posições por página):</p>
                         <div className="grid grid-cols-4 gap-1 text-center text-xs font-mono">
@@ -258,7 +272,9 @@ function App() {
                         </div>
                       </div>
 
-                      <p className="pt-1"><strong>Exemplo de dados com os 3 tipos de agrupamento:</strong></p>
+                      <p className="pt-1">
+                        <strong>Exemplo de dados com os 3 tipos de agrupamento:</strong>
+                      </p>
                       <div className="bg-background p-2 rounded text-xs font-mono">
                         <div className="w-full overflow-x-auto">
                           <table className="w-full min-w-max">
@@ -328,22 +344,36 @@ function App() {
                           </table>
                         </div>
                       </div>
-                      
+
                       <div className="mt-2 space-y-1 text-xs">
                         <p className="font-medium">📝 Exemplos acima mostram:</p>
                         <ul className="ml-4 space-y-1">
-                          <li>• <strong>Posição 1:</strong> Produto único (Furadeira)</li>
-                          <li>• <strong>Posição 2:</strong> Mesmo preço (3 porcas diferentes, R$ 15,50 cada)</li>
-                          <li>• <strong>Posição 3:</strong> Preços diferentes (2 parafusos, R$ 8,90 e R$ 12,90)</li>
+                          <li>
+                            • <strong>Posição 1:</strong> Produto único (Furadeira)
+                          </li>
+                          <li>
+                            • <strong>Posição 2:</strong> Mesmo preço (3 porcas diferentes, R$ 15,50 cada)
+                          </li>
+                          <li>
+                            • <strong>Posição 3:</strong> Preços diferentes (2 parafusos, R$ 8,90 e R$ 12,90)
+                          </li>
                         </ul>
                       </div>
-                      
+
                       <div className="space-y-1">
-                        <p className="text-xs italic">💡 <strong>Agrupamento automático:</strong></p>
+                        <p className="text-xs italic">
+                          💡 <strong>Agrupamento automático:</strong>
+                        </p>
                         <ul className="text-xs italic ml-4 space-y-1">
-                          <li>• <strong>Mesmo preço:</strong> Produtos na mesma posição com preço igual</li>
-                          <li>• <strong>Preços diferentes:</strong> Produtos na mesma posição com preços distintos</li>
-                          <li>• <strong>Produto único:</strong> Um produto por posição</li>
+                          <li>
+                            • <strong>Mesmo preço:</strong> Produtos na mesma posição com preço igual
+                          </li>
+                          <li>
+                            • <strong>Preços diferentes:</strong> Produtos na mesma posição com preços distintos
+                          </li>
+                          <li>
+                            • <strong>Produto único:</strong> Um produto por posição
+                          </li>
                         </ul>
                       </div>
                     </div>
@@ -381,9 +411,7 @@ function App() {
                       <Settings className="h-5 w-5" />
                       <span>Configurações</span>
                     </CardTitle>
-                    <CardDescription>
-                      Personalize o título, cores e textos do seu encarte
-                    </CardDescription>
+                    <CardDescription>Personalize o título, cores e textos do seu encarte</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ConfigPanel config={view.config!} onConfigChange={handleConfigChange} />
@@ -394,11 +422,7 @@ function App() {
               {view.groups && view.groups.length > 12 ? (
                 // Multi-flyer preview - no Card wrapper to allow independent containers
                 <div className="w-full">
-                  <MultiFlyerPreview
-                    ref={flyerRef}
-                    config={view.config!}
-                    groups={view.groups!}
-                  />
+                  <MultiFlyerPreview ref={flyerRef} config={view.config!} groups={view.groups!} />
                 </div>
               ) : (
                 // Single flyer preview - keep Card wrapper
@@ -433,16 +457,13 @@ function App() {
                           </Button>
                         </div>
                       </div>
-                      <CardDescription>
-                        Preview do seu encarte promocional
-                      </CardDescription>
+                      <CardDescription>Preview do seu encarte promocional</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-center overflow-auto p-0" style={{ maxWidth: 'none', maxHeight: 'none' }}>
-                      <FlyerPreview
-                        ref={flyerRef}
-                        config={view.config!}
-                        groups={view.groups!}
-                      />
+                    <CardContent
+                      className="flex items-center justify-center overflow-auto p-0"
+                      style={{ maxWidth: 'none', maxHeight: 'none' }}
+                    >
+                      <FlyerPreview ref={flyerRef} config={view.config!} groups={view.groups!} />
                     </CardContent>
                   </Card>
                 </div>
@@ -457,13 +478,8 @@ function App() {
   };
 
   return (
-    <ThemeProvider
-      defaultTheme="light"
-      storageKey="navas-theme"
-    >
-      <div className="min-h-screen bg-background text-foreground">
-        {renderContent()}
-      </div>
+    <ThemeProvider defaultTheme="light" storageKey="navas-theme">
+      <div className="min-h-screen bg-background text-foreground">{renderContent()}</div>
       <Toaster />
     </ThemeProvider>
   );

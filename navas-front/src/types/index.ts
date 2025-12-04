@@ -64,12 +64,12 @@ export interface ImageDimensions {
 
 export const HEADER_DIMENSIONS: ImageDimensions = {
   width: 1240,
-  height: 474
+  height: 474,
 };
 
 export const FOOTER_DIMENSIONS: ImageDimensions = {
   width: 1240,
-  height: 204
+  height: 204,
 };
 
 export const QUADRANTS_PER_FLYER = 12;

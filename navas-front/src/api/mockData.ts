@@ -59,7 +59,7 @@ export const mockGroups: ProductGroup[] = [
       },
     ],
   },
-  
+
   // 3. Produtos com o Mesmo Preço (Palha de Aço)
   {
     id: 'group-3',
@@ -88,4 +88,4 @@ export const mockGroups: ProductGroup[] = [
       },
     ],
   },
-]; 
+];

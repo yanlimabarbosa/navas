@@ -16,7 +16,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
     onConfigChange({
       ...config,
       [field]: value,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   };
 
@@ -24,7 +24,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
     onConfigChange({
       ...config,
       [field]: imageUrl,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   };
 
@@ -37,7 +37,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
           <ImageIcon className="w-4 h-4 text-primary" />
           <h3 className="text-base font-semibold">Imagens</h3>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <Label>Imagem do Cabeçalho</Label>
@@ -68,7 +68,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
           <Palette className="w-4 h-4 text-primary" />
           <h3 className="text-base font-semibold">Cores</h3>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="primaryColor">Cor Primária</Label>

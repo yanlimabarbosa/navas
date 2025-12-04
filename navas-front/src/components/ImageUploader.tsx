@@ -16,7 +16,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   currentImage,
   targetDimensions,
   onImageChange,
-  className = ''
+  className = '',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,37 +41,46 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   }, []);
 
-  const handleFile = useCallback(async (file: File) => {
-    setIsProcessing(true);
-    setError('');
-    setSuccess('');
+  const handleFile = useCallback(
+    async (file: File) => {
+      setIsProcessing(true);
+      setError('');
+      setSuccess('');
 
-    try {
-      // Verifica se é uma planilha
-      if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-        const result = await processExcelFile(file);
-        // Faça algo com o resultado, por exemplo, setar no estado
-        console.log(result);
-      } else {
-        const processedImageUrl = await ImageProcessor.processImageFile(file, targetDimensions);
-        onImageChange(processedImageUrl);
-        setSuccess('Imagem processada com sucesso!');
-        setTimeout(() => setSuccess(''), 3000);
+      try {
+        // Verifica se é uma planilha
+        if (
+          file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+          file.name.endsWith('.xlsx')
+        ) {
+          const result = await processExcelFile(file);
+          // Faça algo com o resultado, por exemplo, setar no estado
+          console.log(result);
+        } else {
+          const processedImageUrl = await ImageProcessor.processImageFile(file, targetDimensions);
+          onImageChange(processedImageUrl);
+          setSuccess('Imagem processada com sucesso!');
+          setTimeout(() => setSuccess(''), 3000);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao processar imagem';
+        setError(errorMessage);
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar imagem';
-      setError(errorMessage);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [targetDimensions, onImageChange]);
+    },
+    [targetDimensions, onImageChange]
+  );
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFile(files[0]);
-    }
-  }, [handleFile]);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        handleFile(files[0]);
+      }
+    },
+    [handleFile]
+  );
 
   const handleRemoveImage = () => {
     onImageChange(undefined);
@@ -88,11 +97,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       {currentImage ? (
         <div className="relative">
           <div className="border-2 border-border rounded-lg overflow-hidden">
-            <img
-              src={currentImage}
-              alt={label}
-              className="w-full h-24 object-cover"
-            />
+            <img src={currentImage} alt={label} className="w-full h-24 object-cover" />
           </div>
           <button
             onClick={handleRemoveImage}
@@ -119,7 +124,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             id={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
             disabled={isProcessing}
           />
-          
+
           <label
             htmlFor={`image-upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
             className="cursor-pointer"
@@ -133,14 +138,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               ) : (
                 <ImageIcon className="w-6 h-6 text-muted-foreground" />
               )}
-              
+
               <div>
                 <p className="text-sm font-medium text-foreground">
                   {isProcessing ? 'Processando...' : 'Clique ou arraste uma imagem'}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  JPG, PNG ou XLSX
-                </p>
+                <p className="text-xs text-muted-foreground">JPG, PNG ou XLSX</p>
               </div>
             </div>
           </label>
