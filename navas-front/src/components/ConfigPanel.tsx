@@ -45,7 +45,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
               label="Imagem do Cabeçalho"
               currentImage={config.headerImageUrl}
               onImageChange={(url) => handleImageChange('headerImageUrl', url)}
-              targetDimensions={{ width: 1240, height: 474 }}
+              targetDimensions={{ width: 1240, height: 1544 }}
             />
           </div>
 
