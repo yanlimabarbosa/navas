@@ -40,9 +40,9 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <Label>Imagem do Cabeçalho</Label>
+            <Label>Imagem de fundo</Label>
             <ImageUploader
-              label="Imagem do Cabeçalho"
+              label="Imagem de fundo"
               currentImage={config.headerImageUrl}
               onImageChange={(url) => handleImageChange('headerImageUrl', url)}
               targetDimensions={{ width: 1240, height: 1544 }}
