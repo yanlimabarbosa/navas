@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { ProductGroup, FlyerConfig } from '../types';
 
@@ -15,7 +15,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
   return (
     <div
       ref={ref}
-      className={`bg-white shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
+      className={` shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
       style={{
         width: '1240px',
         height: `${474 + 1070 + 204}px`, // 1748px
@@ -28,7 +28,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
       }}
     >
       <div
-        className="relative text-white text-center"
+        className="relative text-white text-center  "
         style={{
           width: '1240px',
           height: '474px',
@@ -77,31 +77,22 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
       </div>
 
       <div
-        className="flex flex-col"
+        className="flex flex-col bg-transparent"
         style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}
       >
         <div
-          className="grid grid-cols-4 grid-rows-3 gap-0 border-black"
+          className="grid grid-cols-4 grid-rows-3 gap-6 px-4 py-6 bg-transparent"
           style={{
             width: '100%',
             height: '100%',
-            borderTop: '1px solid black',
-            borderLeft: '1px solid black',
           }}
         >
           {gridSlots.map((position) => {
             const groupForPosition = groupsByPosition.get(position);
             return (
-              <div
-                key={position}
-                className="h-full"
-                style={{
-                  borderRight: '1px solid black',
-                  borderBottom: '1px solid black',
-                }}
-              >
+              <>
                 {groupForPosition ? <ProductCard group={groupForPosition} /> : <div className="bg-white h-full"></div>}
-              </div>
+              </>
             );
           })}
         </div>
