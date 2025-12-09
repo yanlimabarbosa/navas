@@ -3,7 +3,7 @@ import { ProductGroup, Product } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
 
 const productTitleClass =
-  'text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169]  py-3 rounded-t-lg';
+  'text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3';
 
 const PriceDisplay = ({ price }: { price: number }) => {
   const formattedPrice = (price ?? 0).toFixed(2).replace('.', ',');
@@ -48,8 +48,8 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSingleProduct = (product: Product) => (
-    <div className="flex flex-col flex-1 h-full rounded-lg  bg-white">
-      <h3 className={`${productTitleClass} `}>{product.description}</h3>
+    <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
+      <h3 className={productTitleClass}>{product.description}</h3>
       <div className="  bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}1</div>
       <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full">
         <ImageBlock src={group.image} alt={group.title ?? product.description ?? 'Imagem do produto'} />
@@ -69,9 +69,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   );
 
   const renderSamePriceGroup = () => (
-    <div className="flex flex-col flex-1 h-full rounded-lg bg-white relative">
-      <h3 className={`${productTitleClass} mb-1`}>{group.title}</h3>
-      <div className="flex-1 flex items-center justify-center min-h-[100px] h-full p-2 ">
+    <div className="flex flex-col flex-1 h-full rounded-3xl overflow-hidden  bg-white  relative">
+      <h3 className={productTitleClass}>{group.title}</h3>
+      <div className="flex-1 flex items-center justify-center  min-h-[100px] h-full p-2 ">
         <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
 
         {/* Absolutely positioned codes and specs */}
@@ -115,7 +115,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
     }
 
     return (
-      <div className="flex flex-col flex-1 h-full rounded-lg  bg-white ">
+      <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
         <h3 className={productTitleClass}>{group.title}</h3>
         <div className="relative flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
           <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
