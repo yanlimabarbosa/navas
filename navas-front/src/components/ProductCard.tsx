@@ -17,9 +17,9 @@ const PriceDisplay = ({ price }: { price: number }) => {
       }}
       data-price={fullPriceText}
     >
-      <span className="text-[14px] text-[#003169] top-0 mb-2">R$ </span>
+      <span className="text-[22px] text-[#003169] top-0 mb-4">R$ </span>
       <div>
-        <span className="text-3xl">{fullPriceText.split(',')[0]}</span>
+        <span className="text-[42px]">{fullPriceText.split(',')[0]}</span>
         <span className="text-[14px]">,{fullPriceText.split(',')[1]}</span>
       </div>
     </span>
@@ -50,7 +50,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSingleProduct = (product: Product) => (
     <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
       <h3 className={productTitleClass}>{product.description}</h3>
-      <div className="  bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}1</div>
+      <div className="bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}</div>
       <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full">
         <ImageBlock src={group.image} alt={group.title ?? product.description ?? 'Imagem do produto'} />
       </div>
