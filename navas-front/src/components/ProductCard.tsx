@@ -3,28 +3,25 @@ import { ProductGroup, Product } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
 
 const productTitleClass =
-  'text-[13px] font-bold text-[#6d6e71] text-center leading-tight uppercase tracking-tight break-words w-full';
+  'text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3';
 
 const PriceDisplay = ({ price }: { price: number }) => {
   const formattedPrice = (price ?? 0).toFixed(2).replace('.', ',');
-  const fullPriceText = `R$ ${formattedPrice}`;
+  const fullPriceText = `${formattedPrice}`;
 
   return (
     <span
-      className="text-xl font-black text-red-600"
+      className="flex gap-1 px-2 items-center text-xl font-black text-[#003169] nowrap min-w-[95px] h-full relative"
       style={{
-        fontSize: '20px',
-        fontWeight: '900',
-        color: '#e7010f',
-        letterSpacing: '-0.025em',
-        display: 'inline-block',
-        whiteSpace: 'nowrap',
-        minWidth: '95px',
         textAlign: 'center',
       }}
       data-price={fullPriceText}
     >
-      {fullPriceText}
+      <span className="text-[14px] text-[#003169] top-0 mb-2">R$ </span>
+      <div>
+        <span className="text-3xl">{fullPriceText.split(',')[0]}</span>
+        <span className="text-[14px]">,{fullPriceText.split(',')[1]}</span>
+      </div>
     </span>
   );
 };
@@ -51,23 +48,18 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   const renderSingleProduct = (product: Product) => (
-    <div className="flex flex-col flex-1 h-full">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-4">
+    <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
+      <h3 className={productTitleClass}>{product.description}</h3>
+      <div className="  bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}1</div>
+      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full">
         <ImageBlock src={group.image} alt={group.title ?? product.description ?? 'Imagem do produto'} />
-        <div className="absolute bottom-2 right-0 bg-black text-white text-[13px] px-2 rounded-l-md font-bold shadow h-[24px] flex items-center">
-          {product.code}
-        </div>
       </div>
 
-      <div className="flex flex-col items-center px-2">
-        <h3 className={`${productTitleClass} mb-1`}>{product.description}</h3>
+      <div className="flex items-center pb-10 pl-2 relative">
         <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-[16px]"
+          className="flex items-center justify-center bg-yellow-400 text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-5"
           style={{
             minHeight: '35px',
-            minWidth: '210px',
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
           }}
         >
           <PriceDisplay price={product.price} />
@@ -77,36 +69,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
   );
 
   const renderSamePriceGroup = () => (
-    <div className="flex flex-col flex-1 h-full">
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
+    <div className="flex flex-col flex-1 h-full rounded-3xl overflow-hidden  bg-white  relative">
+      <h3 className={productTitleClass}>{group.title}</h3>
+      <div className="flex-1 flex items-center justify-center  min-h-[100px] h-full p-2 ">
         <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
 
         {/* Absolutely positioned codes and specs */}
-        <div className="absolute bottom-2 right-0 flex flex-col items-end">
-          {group.products.slice(0, 6).map((p) => (
-            <div key={p.id} className="mb-1 last:mb-0">
-              <div className="flex items-center bg-black pl-2 pr-2 gap-4 rounded-l-md h-[24px] w-auto justify-center">
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 grid-rows-1 w-full pl-1 pb-4 z-10 ">
+        <div
+          className="flex items-center justify-center bg-yellow-400 text-center h-[70px] rounded-tr-3xl rounded-bl-3xl"
+          style={{
+            minHeight: '35px',
+          }}
+        >
+          <PriceDisplay price={group.products[0].price} />
+        </div>
+        <div className=" items-end z-10">
+          {group.products.slice(0, 6).map((p, i) => (
+            <div key={p.id} className={i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'}>
+              <div className=" pl-2 pr-2  h-[24px] ">
                 <span className="text-white text-[13px] font-bold whitespace-nowrap text-center">
-                  {p.code} - <span className="text-[#bdbdbd]">{p.specifications}</span>
+                  {p.code} - <span className="text-[#f3f0f0] font-light">{p.specifications}</span>
                 </span>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center px-2">
-        <h3 className={`${productTitleClass} mb-1`}>{group.title}</h3>
-        <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[35px] px-4 rounded-[16px]"
-          style={{
-            minHeight: '35px',
-            minWidth: '210px',
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
-          }}
-        >
-          <PriceDisplay price={group.products[0].price} />
         </div>
       </div>
     </div>
@@ -116,47 +105,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
     const count = group.products.length;
     let priceFont = 'text-[13px]';
     let rowHeight = 'h-[24px]';
-    let gap = 'gap-2';
 
     if (count >= 6) {
       priceFont = 'text-[11px]';
       rowHeight = 'h-[20px]';
-      gap = 'gap-1';
     } else if (count === 5) {
       priceFont = 'text-[12px]';
       rowHeight = 'h-[22px]';
-      gap = 'gap-1.5';
     }
 
     return (
-      <div className="flex flex-col flex-1 h-full">
-        <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
+      <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
+        <h3 className={productTitleClass}>{group.title}</h3>
+        <div className="relative flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
           <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
         </div>
 
-        <div className="w-full flex items-center justify-center mb-2">
-          <h3 className={productTitleClass}>{group.title}</h3>
-        </div>
-
-        <div className={`flex flex-col ${gap} w-full px-2 pb-2`}>
-          {group.products.slice(0, 6).map((p) => (
-            <div key={p.id} className={`flex w-full ${rowHeight} items-center overflow-hidden rounded-md bg-black`}>
-              <div className="flex gap-2 items-center bg-black pl-2 pr-2 flex-1 min-w-0">
+        <div className={`flex flex-col w-full px-2 pb-2`}>
+          {group.products.slice(0, 6).map((p, i) => (
+            <div
+              key={p.id}
+              className={`flex ${rowHeight} items-center overflow-hidden  ${
+                i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'
+              }`}
+            >
+              <div className="flex items-center  pl-2 pr-2 flex-1 ">
                 <span className="text-white text-[12px] font-bold text-left whitespace-nowrap">{p.code}</span>
-                <span className="text-[#bdbdbd] text-[12px] font-semibold text-center w-full">{p.specifications}</span>
+                <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
               </div>
               <div
-                className="flex items-center justify-center bg-yellow-400 px-2 rounded-l-[6px]"
-                style={{
-                  minWidth: '65px',
-                  height: '100%',
-                }}
+                className={`flex items-center justify-center ${
+                  i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
+                } px-2 h-full min-w-24`}
               >
                 <span
-                  className={`font-black text-red-600 ${priceFont}`}
+                  className={`font-black text-[#002F68] ${priceFont}`}
                   style={{
-                    fontWeight: 900,
-                    color: '#e7010f',
                     letterSpacing: '-0.025em',
                     display: 'inline-block',
                     whiteSpace: 'nowrap',
@@ -189,12 +173,5 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
     }
   };
 
-  const baseClasses =
-    'w-full h-full flex flex-col overflow-hidden p-0 relative ' +
-    (['single', 'same-price', 'different-price'].includes(group.groupType)
-      ? 'bg-white shadow-none rounded-none ' +
-        'before:content-[" "] before:block before:w-full before:h-[4px] before:absolute before:top-0 before:left-0'
-      : 'bg-white shadow-sm rounded-none p-2');
-
-  return <div className={baseClasses}>{renderContent()}</div>;
+  return <>{renderContent()}</>;
 };

@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { ProductGroup, FlyerConfig } from '../types';
 
@@ -20,7 +20,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
   return (
     <div
       ref={ref}
-      className={`bg-white shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
+      className={` shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
       style={{
         width: '1240px',
         height: `${474 + 1070 + 204}px`, // 1748px
