@@ -12,6 +12,11 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
   const groupsByPosition = new Map(groups.map((group) => [group.position, group]));
   const gridSlots = Array.from({ length: 12 }, (_, index) => index + 1);
 
+  const bgString = !config.headerImageUrl
+    ? `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
+    : `url(${config.headerImageUrl}) center/cover`;
+  console.log('🚀 ~ config.headerImageUrl:', config.headerImageUrl);
+
   return (
     <div
       ref={ref}
@@ -27,78 +32,52 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
         fontSize: '16px',
       }}
     >
-      <div
-        className="relative text-white text-center  "
+      <main
         style={{
-          width: '1240px',
-          height: '474px',
-          flexShrink: 0,
-          background: !config.headerImageUrl
-            ? `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
-            : undefined,
+          background: config.headerImageUrl
+            ? `url(${config.headerImageUrl})`
+            : `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`,
         }}
       >
-        {config.headerImageUrl ? (
-          <img
-            src={config.headerImageUrl}
-            alt="Header"
+        <header className="relative text-white text-center min-h-[474px] h-[474px] w-[1240px]"></header>
+
+        <main
+          className="flex flex-col"
+          style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}
+        >
+          <div
+            className="grid grid-cols-4 grid-rows-3 gap-0 border-black"
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
-              display: 'block',
-              margin: 0,
-              padding: 0,
-              border: 0,
-              background: '#fff',
+              borderTop: '1px solid black',
+              borderLeft: '1px solid black',
             }}
-          />
-        ) : (
-          <div
-            className="relative z-10 h-full flex flex-col justify-center items-center"
-            style={{ padding: 0, margin: 0 }}
           >
-            <div className="absolute inset-0 bg-pattern opacity-10"></div>
-            {config.title && (
-              <h2
-                className="text-4xl font-black bg-white text-red-600 px-4 py-2 rounded inline-block max-w-full tracking-normal"
-                style={{ letterSpacing: '0.1px' }}
-              >
-                {config.title || 'Encarte sem Título'}
-              </h2>
-            )}
-            {config.headerText && (
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
-                <p className="text-sm font-medium">{config.headerText}</p>
-              </div>
-            )}
+            {gridSlots.map((position) => {
+              const groupForPosition = groupsByPosition.get(position);
+              return (
+                <div
+                  key={position}
+                  className="h-full"
+                  style={{
+                    borderRight: '1px solid black',
+                    borderBottom: '1px solid black',
+                  }}
+                >
+                  {groupForPosition ? (
+                    <ProductCard group={groupForPosition} />
+                  ) : (
+                    <div className="bg-white h-full"></div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </main>
+      </main>
 
-      <div
-        className="flex flex-col bg-transparent"
-        style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}
-      >
-        <div
-          className="grid grid-cols-4 grid-rows-3 gap-6 px-4 py-6 bg-transparent"
-          style={{
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          {gridSlots.map((position) => {
-            const groupForPosition = groupsByPosition.get(position);
-            return (
-              <>
-                {groupForPosition ? <ProductCard group={groupForPosition} /> : <div className="bg-white h-full"></div>}
-              </>
-            );
-          })}
-        </div>
-      </div>
-
-      <div
+      <footer
         className="relative text-white"
         style={{
           width: '1240px',
@@ -132,7 +111,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
             <p className="text-xs font-medium text-center">{config.footerText}</p>
           </div>
         )}
-      </div>
+      </footer>
     </div>
   );
 });
