@@ -1,23 +1,33 @@
 import React from 'react';
-import { ProductGroup, Product } from '../types';
+import { ProductGroup, Product, FlyerConfig } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
 
 const productTitleClass =
   'text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3';
 
-const PriceDisplay = ({ price }: { price: number }) => {
+const PriceDisplay = ({
+  price,
+  priceColor,
+  priceBackgroundColor,
+}: {
+  price: number;
+  priceColor: string;
+  priceBackgroundColor: string;
+}) => {
   const formattedPrice = (price ?? 0).toFixed(2).replace('.', ',');
   const fullPriceText = `${formattedPrice}`;
 
   return (
     <span
-      className="flex gap-1 px-2 items-center text-xl font-black text-[#003169] nowrap min-w-[95px] h-full relative"
+      className="flex gap-1 px-2 items-center text-xl font-black nowrap min-w-[90px] h-full relative rounded-tr-3xl rounded-bl-3xl"
       style={{
         textAlign: 'center',
+        color: priceColor,
+        backgroundColor: priceBackgroundColor,
       }}
       data-price={fullPriceText}
     >
-      <span className="text-[22px] text-[#003169] top-0 mb-4">R$ </span>
+      <span className="text-[22px]  top-0 mb-4">R$ </span>
       <div>
         <span className="text-[42px]">{fullPriceText.split(',')[0]}</span>
         <span className="text-[14px]">,{fullPriceText.split(',')[1]}</span>
@@ -46,7 +56,9 @@ interface ProductCardProps {
   group: ProductGroup;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
+export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> = ({ group, config }) => {
+  const priceColor = config.priceColor;
+  const priceBackgroundColor = config.priceBackgroundColor;
   const renderSingleProduct = (product: Product) => (
     <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
       <h3 className={productTitleClass}>{product.description}</h3>
@@ -57,12 +69,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
 
       <div className="flex items-center pb-10 pl-2 relative">
         <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-5"
+          className="flex items-center justify-center  text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-5"
           style={{
             minHeight: '35px',
+            backgroundColor: priceBackgroundColor,
           }}
         >
-          <PriceDisplay price={product.price} />
+          <PriceDisplay price={product.price} priceColor={priceColor} priceBackgroundColor={priceBackgroundColor} />
         </div>
       </div>
     </div>
@@ -78,14 +91,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ group }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-2 grid-rows-1 w-full pl-1 pb-4 z-10 ">
-        <div
-          className="flex items-center justify-center bg-yellow-400 text-center h-[70px] rounded-tr-3xl rounded-bl-3xl"
-          style={{
-            minHeight: '35px',
-          }}
-        >
-          <PriceDisplay price={group.products[0].price} />
-        </div>
+        <PriceDisplay
+          price={group.products[0].price}
+          priceColor={priceColor}
+          priceBackgroundColor={priceBackgroundColor}
+        />
+
         <div className=" items-end z-10">
           {group.products.slice(0, 6).map((p, i) => (
             <div key={p.id} className={i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'}>
