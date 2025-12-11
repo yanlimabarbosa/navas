@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlyerConfig } from '../types';
-import { Type, Image as ImageIcon, Palette } from 'lucide-react';
+import { Image as ImageIcon, Palette } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
@@ -103,6 +103,45 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
                 type="text"
                 value={config.secondaryColor}
                 onChange={(e) => handleChange('secondaryColor', e.target.value)}
+                placeholder="#2b3990"
+              />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="primaryColor">Cor Preço</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="primaryColor"
+                type="color"
+                value={config.priceColor}
+                onChange={(e) => handleChange('priceColor', e.target.value)}
+                className="w-12 h-10 p-1"
+              />
+              <Input
+                type="text"
+                value={config.priceColor}
+                onChange={(e) => handleChange('priceColor', e.target.value)}
+                placeholder="#d91e2b"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="priceBackgroundColor">Cor Fundo do Preço</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="priceBackgroundColor"
+                type="color"
+                value={config.priceBackgroundColor}
+                onChange={(e) => handleChange('priceBackgroundColor', e.target.value)}
+                className="w-12 h-10 p-1"
+              />
+              <Input
+                type="text"
+                value={config.priceBackgroundColor}
+                onChange={(e) => handleChange('priceBackgroundColor', e.target.value)}
                 placeholder="#2b3990"
               />
             </div>

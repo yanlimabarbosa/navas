@@ -12,15 +12,10 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
   const groupsByPosition = new Map(groups.map((group) => [group.position, group]));
   const gridSlots = Array.from({ length: 12 }, (_, index) => index + 1);
 
-  const bgString = !config.headerImageUrl
-    ? `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
-    : `url(${config.headerImageUrl}) center/cover`;
-  console.log('🚀 ~ config.headerImageUrl:', config.headerImageUrl);
-
   return (
     <div
       ref={ref}
-      className={` shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
+      className={`shadow-xl rounded-none overflow-hidden flex flex-col ${className}`}
       style={{
         width: '1240px',
         height: `${474 + 1070 + 204}px`, // 1748px
@@ -57,7 +52,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
               return (
                 <div key={position} className="h-full">
                   {groupForPosition ? (
-                    <ProductCard group={groupForPosition} />
+                    <ProductCard group={groupForPosition} config={config} />
                   ) : (
                     <div className="bg-white h-full"></div>
                   )}
