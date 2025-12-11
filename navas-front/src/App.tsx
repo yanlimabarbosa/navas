@@ -67,6 +67,8 @@ function App() {
             backgroundColor: '#FFFFFF',
             primaryColor: '#d91e2b',
             secondaryColor: '#2b3990',
+            priceColor: '#ffffff',
+            priceBackgroundColor: '#00569F',
             createdAt: new Date(),
             updatedAt: new Date(),
             headerImageUrl: '',
