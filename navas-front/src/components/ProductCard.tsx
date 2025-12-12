@@ -21,7 +21,7 @@ const PriceDisplay = ({
 
   return (
     <span
-      className="flex gap-1 p-2  items-center text-xl font-black nowrap min-w-[90px] h-full relative rounded-tr-3xl rounded-bl-3xl"
+      className="font-anton flex gap-1 p-2  items-center text-xl font-black nowrap min-w-[90px] h-full relative rounded-tr-3xl rounded-bl-3xl"
       style={{
         textAlign: align,
         color: priceColor,
@@ -164,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
                 } px-2 h-full min-w-24`}
               >
                 <span
-                  className={`font-black text-[#002F68] ${priceFont}`}
+                  className={`font-anton font-black text-[#002F68] text-[18px]  ${priceFont}`}
                   style={{
                     letterSpacing: '-0.025em',
                     display: 'inline-block',
