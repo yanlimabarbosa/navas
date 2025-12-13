@@ -21,19 +21,16 @@ const PriceDisplay = ({
 
   return (
     <span
-      className="font-anton flex gap-1 p-2  items-center text-xl font-black nowrap min-w-[90px] h-full relative rounded-tr-3xl rounded-bl-3xl"
+      className="price-display font-anton flex gap-0.5 p-2 rounded-tr-3xl rounded-bl-3xl min-w-[90px]"
       style={{
-        textAlign: align,
         color: priceColor,
         backgroundColor: priceBackgroundColor,
       }}
       data-price={fullPriceText}
     >
-      <span className="text-[22px]  top-0 mb-4">R$ </span>
-      <div>
-        <span className="text-[42px]">{fullPriceText.split(',')[0]}</span>
-        <span className="text-[22px]">,{fullPriceText.split(',')[1]}</span>
-      </div>
+      <span className="text-sm flex-shrink-0">R$</span>
+      <span className="text-5xl leading-none flex-shrink-0">{fullPriceText.split(',')[0]}</span>
+      <span className="text-xl leading-none flex-shrink-0 self-start">,{fullPriceText.split(',')[1]}</span>
     </span>
   );
 };

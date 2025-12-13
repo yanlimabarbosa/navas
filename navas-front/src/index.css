@@ -242,3 +242,13 @@
 .export-mode .text-black {
   color: #000000 !important;
 }
+
+/* Ajuste de largura do PriceDisplay durante exportação */
+.exporting .price-display {
+  min-width: 130px !important;
+}
+
+/* Evita sobreposição da fonte Anton durante exportação */
+.exporting .price-display span {
+  flex-shrink: 0 !important;
+}

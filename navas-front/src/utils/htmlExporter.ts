@@ -279,6 +279,7 @@ async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.classList.add('exporting');
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
@@ -351,6 +352,7 @@ async function generatePDFData(element: HTMLElement): Promise<Uint8Array> {
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.classList.add('exporting');
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
@@ -433,6 +435,7 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.classList.add('exporting');
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
@@ -534,6 +537,7 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.classList.add('exporting');
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
@@ -611,6 +615,7 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
   `;
 
   const clonedElement = pageElement.cloneNode(true) as HTMLElement;
+  clonedElement.classList.add('exporting');
   clonedElement.style.cssText = `
     width: ${pageElement.offsetWidth}px;
     height: ${pageElement.offsetHeight}px;
