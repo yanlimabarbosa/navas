@@ -244,24 +244,6 @@ export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename
   console.log('🎉 PDF ZIP batch export completed successfully');
 }
 
-// Helper function to check for missing images
-function checkForMissingImages(element: HTMLElement): string[] {
-  const missingImages: string[] = [];
-  const imgElements = element.querySelectorAll('img');
-
-  imgElements.forEach((img) => {
-    if (img.src && !img.src.startsWith('data:') && !img.src.startsWith('blob:')) {
-      // Check if image failed to load by looking at the complete property
-      // and also checking if the image has any visible dimensions
-      if (img.complete === false || (img.naturalWidth === 0 && img.naturalHeight === 0 && img.complete === true)) {
-        missingImages.push(img.src);
-      }
-    }
-  });
-
-  return missingImages;
-}
-
 // Helper function to generate image data as binary
 async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
   const scrollPosition = window.scrollY;
