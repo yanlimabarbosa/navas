@@ -41,7 +41,7 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
           style={{ width: '1240px', height: '1070px', padding: '0px', boxSizing: 'border-box' }}
         >
           <div
-            className="grid grid-cols-4 grid-rows-3 gap-4 border-black px-2"
+            className="grid grid-cols-4 grid-rows-3 gap-4 border-black px-2 pb-6"
             style={{
               width: '100%',
               height: '100%',

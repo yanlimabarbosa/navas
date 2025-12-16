@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { ProductGroup, Product, FlyerConfig } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
 
@@ -26,6 +26,7 @@ const PriceDisplay = ({
         textAlign: align,
         color: priceColor,
         backgroundColor: priceBackgroundColor,
+        fontFamily: 'Anton, sans-serif',
       }}
       data-price={fullPriceText}
     >
@@ -61,9 +62,6 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> = ({ group, config }) => {
   const priceColor = config.priceColor;
   const priceBackgroundColor = config.priceBackgroundColor;
-  const [stackSamePrice, setStackSamePrice] = useState(false);
-  const samePriceGridRef = useRef<HTMLDivElement | null>(null);
-  const samePricePriceRef = useRef<HTMLDivElement | null>(null);
   const renderSingleProduct = (product: Product) => (
     <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
       <h3 className={productTitleClass}>{product.description}</h3>
@@ -72,9 +70,9 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
         <ImageBlock src={group.image} alt={group.title ?? product.description ?? 'Imagem do produto'} />
       </div>
 
-      <div className="flex items-center pb-10 pl-2 relative">
+      <div className="flex items-center pb-4 pl-2 relative">
         <div
-          className="flex items-center justify-center  text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-5"
+          className="flex items-center justify-center  text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-2"
           style={{
             minHeight: '35px',
             backgroundColor: priceBackgroundColor,
@@ -87,38 +85,50 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
   );
 
   const renderSamePriceGroup = () => (
-    <div className="flex flex-col flex-1 h-full rounded-3xl overflow-hidden bg-white relative">
+    <div className="flex flex-col flex-1 h-full rounded-3xl overflow-hidden bg-white">
       <h3 className={productTitleClass}>{group.title}</h3>
-      <div className="flex-1 flex items-center justify-center min-h-[100px] h-full p-2 ">
+      <div className="flex-1 flex items-center justify-center min-h-[100px] h-full p-2">
         <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
       </div>
 
-      <div
-        ref={samePriceGridRef}
-        className={`${
-          stackSamePrice ? 'grid grid-cols-1 justify-items-end' : 'grid grid-cols-2'
-        } gap-2 grid-rows-1 w-full pl-1 pb-4 z-10 absolute bottom-0 same-price-grid`}
-      >
-        <div
-          ref={samePricePriceRef}
-          className={`${stackSamePrice ? 'flex justify-end items-end self-end' : 'flex justify-center items-center'}`}
-        >
-          <PriceDisplay
-            price={group.products[0].price}
-            priceColor={priceColor}
-            priceBackgroundColor={priceBackgroundColor}
-            align={stackSamePrice ? 'right' : 'center'}
-          />
+      {/* Container do preço e códigos */}
+      <div className="flex w-full px-2 pb-2 gap-2 h-auto">
+        {/* Preço - lado esquerdo */}
+        <div className="flex-shrink-0">
+          <span
+            className="flex gap-1 p-2 items-center font-black rounded-br-3xl rounded-tr-lg"
+            style={{
+              color: config.priceColor,
+              backgroundColor: config.priceBackgroundColor,
+              fontFamily: 'Anton, sans-serif',
+              borderRadius: '0px 16px 0px 16px',
+            }}
+          >
+            <span className="text-[16px]">R$ </span>
+            <div>
+              <span className="text-[28px]">{(group.products[0].price ?? 0).toFixed(2).replace('.', ',').split(',')[0]}</span>
+              <span className="text-[14px]">,{(group.products[0].price ?? 0).toFixed(2).replace('.', ',').split(',')[1]}</span>
+            </div>
+          </span>
         </div>
 
-        <div className={`${stackSamePrice ? 'flex flex-col items-end text-right' : ''} items-end z-10`}>
+        {/* Códigos - lado direito */}
+        <div className="flex flex-col gap-0.5 flex-1">
           {group.products.slice(0, 6).map((p, i) => (
-            <div key={p.id} className={i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'}>
-              <div className="pl-2 pr-2 h-[24px]">
-                <span className="text-white text-[13px] font-bold whitespace-nowrap text-center">
-                  {p.code} - <span className="text-[#f3f0f0] font-light">{p.specifications}</span>
+            <div
+              key={p.id}
+              className={`flex items-center h-[22px] px-1 text-[10px] min-w-0 ${
+                i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'
+              }`}
+            >
+              <span className="text-white font-bold truncate">
+                {p.code}
+              </span>
+              {p.specifications && (
+                <span className="text-[#f3f0f0] font-light ml-0.5 truncate">
+                  - {p.specifications}
                 </span>
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -128,15 +138,18 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
 
   const renderDifferentPriceGroup = () => {
     const count = group.products.length;
-    let priceFont = 'text-[13px]';
-    let rowHeight = 'h-[24px]';
+    let priceFont = 'text-[15px]';
+    let rowHeight = 'h-[28px]';
+    let descFont = 'text-[13px]';
 
     if (count >= 6) {
-      priceFont = 'text-[11px]';
-      rowHeight = 'h-[20px]';
+      priceFont = 'text-[13px]';
+      rowHeight = 'h-[24px]';
+      descFont = 'text-[12px]';
     } else if (count === 5) {
-      priceFont = 'text-[12px]';
-      rowHeight = 'h-[22px]';
+      priceFont = 'text-[14px]';
+      rowHeight = 'h-[26px]';
+      descFont = 'text-[12px]';
     }
 
     return (
@@ -155,11 +168,11 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
               }`}
             >
               <div className="flex items-center  pl-2 pr-2 flex-1 ">
-                <span className="text-white text-[12px] font-bold text-left whitespace-nowrap">{p.code}</span>
-                <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
+                <span className={`text-white font-bold text-left whitespace-nowrap ${descFont}`}>{p.code}</span>
+                <span className={`text-[#f5f3f3] font-light text-center w-full ${descFont}`}>{p.specifications}</span>
               </div>
               <div
-                className={`flex items-center justify-center ${
+                className={`flex items-center justify-center rounded-tr-3xl rounded-bl-3xl ${
                   i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
                 } px-2 h-full min-w-24`}
               >
@@ -170,6 +183,7 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
                     display: 'inline-block',
                     whiteSpace: 'nowrap',
                     textAlign: 'center',
+                    fontFamily: 'Anton, sans-serif',
                   }}
                   data-price={`R$ ${(p.price ?? 0).toFixed(2).replace('.', ',')}`}
                 >
@@ -198,29 +212,5 @@ export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> =
     }
   };
 
-  useSamePriceAutoStack(samePriceGridRef, samePricePriceRef, setStackSamePrice);
   return <>{renderContent()}</>;
 };
-
-function measureAndDecideStack(container: HTMLDivElement | null, priceEl: HTMLDivElement | null): boolean {
-  if (!container || !priceEl) return false;
-  const containerWidth = container.clientWidth;
-  const colWidth = containerWidth / 2;
-  const priceWidth = priceEl.scrollWidth;
-  return priceWidth > colWidth - 8;
-}
-
-// Hook up measurement after render
-// Avoid comments per project style; logic: decides when to stack based on widths
-export function useSamePriceAutoStack(
-  gridRef: React.MutableRefObject<HTMLDivElement | null>,
-  priceRef: React.MutableRefObject<HTMLDivElement | null>,
-  setStack: (v: boolean) => void
-) {
-  useEffect(() => {
-    const measure = () => setStack(measureAndDecideStack(gridRef.current, priceRef.current));
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [gridRef, priceRef, setStack]);
-}

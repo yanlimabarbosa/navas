@@ -10,6 +10,7 @@ import { processExcelFile } from './utils/excelProcessor';
 import { FlyerPreview } from './components/FlyerPreview';
 import { MultiFlyerPreview } from './components/MultiFlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
+import { TemplateDownloadPanel } from './components/TemplateDownloadPanel';
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
 import { ImageProcessor } from './utils/imageProcessor';
@@ -382,6 +383,10 @@ function App() {
                   </div>
                 </CardContent>
               </Card>
+
+              <div className="mt-8">
+                <TemplateDownloadPanel />
+              </div>
             </div>
           </div>
         );

@@ -5,8 +5,10 @@ export const mockConfig: FlyerConfig = {
   id: 'config-1',
   title: 'Encarte de Ofertas',
   backgroundColor: '#FFFFFF',
-  primaryColor: '#d91e2b', // Red
-  secondaryColor: '#2b3990', // Blue
+  primaryColor: '#d91e2b',
+  secondaryColor: '#2b3990',
+  priceColor: '#ffffff',
+  priceBackgroundColor: '#00569F',
   createdAt: new Date(),
   updatedAt: new Date(),
   headerImageUrl: '',

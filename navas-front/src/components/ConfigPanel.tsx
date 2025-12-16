@@ -108,6 +108,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
             </div>
           </div>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="primaryColor">Cor Preço</Label>
