@@ -1,6 +1,7 @@
 import domtoimage from 'dom-to-image';
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
+import { injectExportFonts } from './injectFonts';
 
 // File System Access API types
 interface FileSystemDirectoryHandle {
@@ -14,6 +15,18 @@ interface FileSystemFileHandle {
 interface FileSystemWritableFileStream {
   write(data: Uint8Array): Promise<void>;
   close(): Promise<void>;
+}
+
+function applyPrintOptimizations(root: HTMLElement) {
+  const priceTargets = root.querySelectorAll('[data-print-element="product-card-price"]');
+  for (const el of Array.from(priceTargets)) {
+    (el as HTMLElement).classList.add('export-price');
+  }
+
+  const multiplePriceTargets = root.querySelectorAll('[data-print-element="product-card-multiple-price"]');
+  for (const el of Array.from(multiplePriceTargets)) {
+    (el as HTMLElement).classList.add('export-multiple-price');
+  }
 }
 
 declare global {
@@ -261,6 +274,8 @@ async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
+  clonedElement.style.fontFamily = "'Anton', sans-serif";
+  clonedElement.style.fontWeight = '400';
   clonedElement.style.cssText = `
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
@@ -269,7 +284,8 @@ async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
     top: 0;
     left: 0;
   `;
-
+  injectExportFonts(clonedElement);
+  applyPrintOptimizations(clonedElement);
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
 
@@ -346,6 +362,7 @@ async function generatePDFData(element: HTMLElement): Promise<Uint8Array> {
   document.body.appendChild(exportContainer);
 
   try {
+    applyPrintOptimizations(clonedElement);
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
 
@@ -406,12 +423,12 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
   const exportContainer = document.createElement('div');
   exportContainer.style.cssText = `
     position: fixed;
-    top: -9999px;
-    left: -9999px;
+    top: 0;
+    left: 0;
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
     overflow: hidden;
-    z-index: -9999;
+    z-index: 0;
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
@@ -419,15 +436,13 @@ async function exportSingleFlyerAsImage(element: HTMLElement, filename: string):
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
     transform: none;
-    position: relative;
-    top: 0;
-    left: 0;
   `;
 
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
 
   try {
+    applyPrintOptimizations(clonedElement);
     const cleanContent = getCleanFlyerContent(clonedElement);
     const exportElement = cleanContent[0];
 
@@ -507,12 +522,10 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
   const exportContainer = document.createElement('div');
   exportContainer.style.cssText = `
     position: fixed;
-    top: -9999px;
-    left: -9999px;
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
     overflow: hidden;
-    z-index: -9999;
+ 
   `;
 
   const clonedElement = element.cloneNode(true) as HTMLElement;
@@ -520,11 +533,9 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     width: ${element.offsetWidth}px;
     height: ${element.offsetHeight}px;
     transform: none;
-    position: relative;
-    top: 0;
-    left: 0;
+ 
   `;
-
+  applyPrintOptimizations(clonedElement);
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
 
@@ -601,7 +612,7 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
     top: 0;
     left: 0;
   `;
-
+  applyPrintOptimizations(clonedElement);
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
 
@@ -631,7 +642,6 @@ async function addFlyerPageToPDF(pdf: jsPDF, pageElement: HTMLElement): Promise<
         height: exportElement.offsetHeight + 'px',
       },
     });
-
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -687,8 +697,6 @@ export async function generateFlyerExportHTML(flyerElement: HTMLElement): Promis
     }
   }
 
-  cssText += `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');\n`;
-
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -702,7 +710,7 @@ ${cssText}
       margin: 0; 
       padding: 0; 
       background: #eee; 
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      font-family: 'Anton', -apple-system, BlinkMacSystemFont !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }

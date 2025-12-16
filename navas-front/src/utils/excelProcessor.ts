@@ -1,6 +1,5 @@
 import * as XLSX from 'xlsx';
 import { ProductGroup, Product, ExcelData, QUADRANTS_PER_FLYER } from '../types';
-import { ImageProcessor } from './imageProcessor';
 
 function getGroupType(products: Product[]): 'single' | 'same-price' | 'different-price' {
   if (products.length === 1) {
@@ -31,7 +30,6 @@ function isPhantomRow(row: Partial<ExcelData>): boolean {
 }
 
 function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | null {
-  console.log(row);
   if (!row.Posicao || typeof row.Posicao !== 'number') {
     return `Linha ${rowIndex + 2}: Posição inválida ou faltando`;
   }
@@ -107,17 +105,14 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
         }
 
         // Group rows by 'Posicao'
-        const groupedByPosition = json.reduce(
-          (acc, row) => {
-            const position = row.Posicao;
-            if (!acc[position]) {
-              acc[position] = [];
-            }
-            acc[position].push(row);
-            return acc;
-          },
-          {} as Record<number, ExcelData[]>
-        );
+        const groupedByPosition = json.reduce((acc, row) => {
+          const position = row.Posicao;
+          if (!acc[position]) {
+            acc[position] = [];
+          }
+          acc[position].push(row);
+          return acc;
+        }, {} as Record<number, ExcelData[]>);
 
         // Transform grouped data into ProductGroup[]
         const productGroups: ProductGroup[] = Object.entries(groupedByPosition).map(([position, rows]) => {
