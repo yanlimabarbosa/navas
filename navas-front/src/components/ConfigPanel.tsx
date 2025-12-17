@@ -148,6 +148,27 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange
             </div>
           </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="subtitleBackgroundColor">Cor Fundo do Subtítulo</Label>
+            <div className="flex space-x-2 mt-1">
+              <Input
+                id="subtitleBackgroundColor"
+                type="color"
+                value={config.subtitleBackgroundColor}
+                onChange={(e) => handleChange('subtitleBackgroundColor', e.target.value)}
+                className="w-12 h-10 p-1"
+              />
+              <Input
+                type="text"
+                value={config.subtitleBackgroundColor}
+                onChange={(e) => handleChange('subtitleBackgroundColor', e.target.value)}
+                placeholder="#00579F"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

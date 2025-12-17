@@ -29,6 +29,7 @@ export interface FlyerConfig {
   secondaryColor: string;
   priceColor: string;
   priceBackgroundColor: string;
+  subtitleBackgroundColor: string;
   createdAt: Date;
   updatedAt: Date;
 }

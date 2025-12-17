@@ -8,7 +8,7 @@ import {
   exportElementAsPDF,
   exportElementAsImageBatch,
   exportElementAsPDFBatch,
-} from '../utils/htmlExporter';
+} from '../utils/htmlExporterV2';
 import { Card } from './ui/card';
 import { useToast } from '../hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';

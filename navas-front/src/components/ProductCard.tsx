@@ -1,9 +1,6 @@
-import React from 'react';
-import { ProductGroup, Product, FlyerConfig } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { ProductGroup, FlyerConfig } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
-
-const productTitleClass =
-  'text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3';
 
 const PriceDisplay = ({
   price,
@@ -16,201 +13,173 @@ const PriceDisplay = ({
   priceBackgroundColor: string;
   align?: 'center' | 'right';
 }) => {
-  const formattedPrice = (price ?? 0).toFixed(2).replace('.', ',');
-  const fullPriceText = `${formattedPrice}`;
+  const [inteiro, decimal] = price.toFixed(2).replace('.', ',').split(',');
 
   return (
-    <span
-      className="flex gap-1 p-2  items-center text-xl font-black nowrap min-w-[90px] h-full relative rounded-tr-3xl rounded-bl-3xl"
+    <div
+      className=" font-anton flex gap-1 p-2 items-center text-xl font-black whitespace-nowrap leading-none min-w-[90px] h-full rounded-tr-3xl rounded-bl-3xl "
       style={{
-        textAlign: align,
         color: priceColor,
         backgroundColor: priceBackgroundColor,
+        textAlign: align,
         fontFamily: 'Anton, sans-serif',
       }}
-      data-price={fullPriceText}
+      data-print-element="product-card-price"
     >
-      <span className="text-[22px]  top-0 mb-4">R$ </span>
-      <div>
-        <span className="text-[42px]">{fullPriceText.split(',')[0]}</span>
-        <span className="text-[22px]">,{fullPriceText.split(',')[1]}</span>
-      </div>
-    </span>
-  );
-};
-
-const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => {
-  const imagePath = src ? ImageProcessor.getImagePath(src) : undefined;
-
-  return (
-    <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
-      {imagePath ? (
-        <img src={imagePath} alt={alt} className="w-full h-full object-contain" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center rounded-[4px]">
-          <span className="text-[10px] text-gray-400">Sem Imagem</span>
-        </div>
-      )}
+      <div className="text-[22px] mb-4 leading-none ">R$ </div>
+      <div className="text-[42px] leading-none">{inteiro}</div>
+      <div className="text-[22px] leading-none">,{decimal}</div>
     </div>
   );
 };
 
-interface ProductCardProps {
-  group: ProductGroup;
-}
+const ImageBlock = ({ src, alt }: { src?: string; alt: string }) => (
+  <div className="w-full aspect-square rounded-md p-1 flex items-center justify-center max-w-[195px] mx-auto">
+    {src ? (
+      <img src={ImageProcessor.getImagePath(src)} alt={alt} className="w-full h-full object-contain" />
+    ) : (
+      <span className="text-[10px] text-gray-400">Sem Imagem</span>
+    )}
+  </div>
+);
 
-export const ProductCard: React.FC<ProductCardProps & { config: FlyerConfig }> = ({ group, config }) => {
-  const priceColor = config.priceColor;
-  const priceBackgroundColor = config.priceBackgroundColor;
-  const renderSingleProduct = (product: Product) => (
-    <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
-      <h3 className={productTitleClass}>{product.description}</h3>
-      <div className="bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}</div>
-      <div className="relative flex-1 flex items-center justify-center min-h-[100px] h-full">
-        <ImageBlock src={group.image} alt={group.title ?? product.description ?? 'Imagem do produto'} />
-      </div>
+export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }> = ({ group, config }) => {
+  const isSingle = group.groupType === 'single';
+  const isSamePrice = group.groupType === 'same-price';
 
-      <div className="flex items-center pb-4 pl-2 relative">
-        <div
-          className="flex items-center justify-center  text-center h-[70px] rounded-tr-3xl rounded-bl-3xl z-30 absolute bottom-2"
-          style={{
-            minHeight: '35px',
-            backgroundColor: priceBackgroundColor,
-          }}
-        >
-          <PriceDisplay price={product.price} priceColor={priceColor} priceBackgroundColor={priceBackgroundColor} />
-        </div>
-      </div>
-    </div>
-  );
+  const [stackSamePrice, setStackSamePrice] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
 
-  const renderSamePriceGroup = () => (
-    <div className="flex flex-col flex-1 h-full rounded-3xl overflow-hidden bg-white">
-      <h3 className={productTitleClass}>{group.title}</h3>
-      <div className="flex-1 flex items-center justify-center min-h-[100px] h-full p-2">
-        <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
-      </div>
+  useEffect(() => {
+    if (!isSamePrice) return;
 
-      {/* Container do preço e códigos */}
-      <div className="flex w-full px-2 pb-2 gap-2 h-auto">
-        {/* Preço - lado esquerdo */}
-        <div className="flex-shrink-0">
-          <span
-            className="flex gap-1 p-2 items-center font-black rounded-br-3xl rounded-tr-lg"
-            style={{
-              color: config.priceColor,
-              backgroundColor: config.priceBackgroundColor,
-              fontFamily: 'Anton, sans-serif',
-              borderRadius: '0px 16px 0px 16px',
-            }}
-          >
-            <span className="text-[16px]">R$ </span>
-            <div>
-              <span className="text-[28px]">{(group.products[0].price ?? 0).toFixed(2).replace('.', ',').split(',')[0]}</span>
-              <span className="text-[14px]">,{(group.products[0].price ?? 0).toFixed(2).replace('.', ',').split(',')[1]}</span>
-            </div>
-          </span>
-        </div>
+    const measure = () => {
+      if (!gridRef.current || !priceRef.current) return;
+      setStackSamePrice(priceRef.current.scrollWidth > gridRef.current.clientWidth / 2 - 8);
+    };
 
-        {/* Códigos - lado direito */}
-        <div className="flex flex-col gap-0.5 flex-1">
-          {group.products.slice(0, 6).map((p, i) => (
-            <div
-              key={p.id}
-              className={`flex items-center h-[22px] px-1 text-[10px] min-w-0 ${
-                i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'
-              }`}
-            >
-              <span className="text-white font-bold truncate">
-                {p.code}
-              </span>
-              {p.specifications && (
-                <span className="text-[#f3f0f0] font-light ml-0.5 truncate">
-                  - {p.specifications}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isSamePrice]);
 
-  const renderDifferentPriceGroup = () => {
-    const count = group.products.length;
-    let priceFont = 'text-[15px]';
-    let rowHeight = 'h-[28px]';
-    let descFont = 'text-[13px]';
-
-    if (count >= 6) {
-      priceFont = 'text-[13px]';
-      rowHeight = 'h-[24px]';
-      descFont = 'text-[12px]';
-    } else if (count === 5) {
-      priceFont = 'text-[14px]';
-      rowHeight = 'h-[26px]';
-      descFont = 'text-[12px]';
-    }
+  // SINGLE
+  if (isSingle) {
+    const product = group.products[0];
 
     return (
-      <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white">
-        <h3 className={productTitleClass}>{group.title}</h3>
-        <div className="relative flex items-center justify-center min-h-[100px] h-full flex-1 p-2">
-          <ImageBlock src={group.image} alt={group.title ?? group.products[0]?.description ?? 'Imagem do produto'} />
+      <CardContainer title={product.description || ''}>
+        <div
+          className="text-white text-[13px] text-center font-bold"
+          style={{ backgroundColor: config.subtitleBackgroundColor }}
+        >
+          {product.code}
         </div>
 
-        <div className={`flex flex-col w-full px-2 pb-2`}>
-          {group.products.slice(0, 6).map((p, i) => (
-            <div
-              key={p.id}
-              className={`flex ${rowHeight} items-center overflow-hidden  ${
-                i % 2 !== 0 ? 'bg-[#00569F]' : 'bg-[#002F68]'
-              }`}
-            >
-              <div className="flex items-center  pl-2 pr-2 flex-1 ">
-                <span className={`text-white font-bold text-left whitespace-nowrap ${descFont}`}>{p.code}</span>
-                <span className={`text-[#f5f3f3] font-light text-center w-full ${descFont}`}>{p.specifications}</span>
-              </div>
-              <div
-                className={`flex items-center justify-center rounded-tr-3xl rounded-bl-3xl ${
-                  i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
-                } px-2 h-full min-w-24`}
-              >
-                <span
-                  className={`font-black text-[#002F68] ${priceFont}`}
-                  style={{
-                    letterSpacing: '-0.025em',
-                    display: 'inline-block',
-                    whiteSpace: 'nowrap',
-                    textAlign: 'center',
-                    fontFamily: 'Anton, sans-serif',
-                  }}
-                  data-price={`R$ ${(p.price ?? 0).toFixed(2).replace('.', ',')}`}
-                >
-                  {`R$ ${(p.price ?? 0).toFixed(2).replace('.', ',')}`}
-                </span>
-              </div>
-            </div>
-          ))}
+        <ProductImageSection src={group.image} alt={product.description || ''} />
+
+        <div className="absolute bottom-5 left-2">
+          <PriceDisplay
+            price={product.price}
+            priceColor={config.priceColor}
+            priceBackgroundColor={config.priceBackgroundColor}
+          />
         </div>
-      </div>
+      </CardContainer>
     );
-  };
+  }
 
-  const renderContent = () => {
-    if (!group) return null;
+  if (isSamePrice) {
+    return (
+      <CardContainer title={group.title}>
+        <ProductImageSection src={group.image} alt={group.title} />
 
-    switch (group.groupType) {
-      case 'single':
-        return renderSingleProduct(group.products[0]);
-      case 'same-price':
-        return renderSamePriceGroup();
-      case 'different-price':
-        return renderDifferentPriceGroup();
-      default:
-        return <div className="text-xs text-red-500">Tipo de grupo inválido</div>;
-    }
-  };
+        <div
+          ref={gridRef}
+          className={`absolute bottom-0 w-full pl-1 pb-4 grid gap-2 ${
+            stackSamePrice ? 'grid-cols-1 justify-items-end' : 'grid-cols-2'
+          }`}
+        >
+          <div ref={priceRef} className="flex justify-end">
+            <PriceDisplay
+              price={group.products[0].price}
+              priceColor={config.priceColor}
+              priceBackgroundColor={config.priceBackgroundColor}
+              align={stackSamePrice ? 'right' : 'center'}
+            />
+          </div>
 
-  return <>{renderContent()}</>;
+          <div className={stackSamePrice ? 'flex flex-col items-end text-right' : ''}>
+            <ProductList products={group.products} showPrice={false} />
+          </div>
+        </div>
+      </CardContainer>
+    );
+  }
+
+  const count = group.products.length;
+  const priceFont = count >= 6 ? 'text-[11px]' : count === 5 ? 'text-[12px]' : 'text-[13px]';
+  const rowHeight = count >= 6 ? 'h-[20px]' : count === 5 ? 'h-[22px]' : 'h-[24px]';
+
+  return (
+    <CardContainer title={group.title}>
+      <ProductImageSection src={group.image} alt={group.title} />
+
+      <div className="px-2 pb-2">
+        <ProductList products={group.products} showPrice priceFont={priceFont} rowHeight={rowHeight} />
+      </div>
+    </CardContainer>
+  );
 };
+
+const CardContainer: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white relative">
+    <h3 className="text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3 px-3">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
+
+const ProductImageSection = ({ src, alt }: { src?: string; alt: string }) => (
+  <div className="flex-1 flex items-center justify-center min-h-[100px] p-2">
+    <ImageBlock src={src} alt={alt} />
+  </div>
+);
+const ProductList = ({
+  products,
+  showPrice,
+  priceFont = 'text-[13px]',
+  rowHeight = 'h-[24px]',
+}: {
+  products: ProductGroup['products'];
+  showPrice: boolean;
+  priceFont?: string;
+  rowHeight?: string;
+}) => (
+  <>
+    {products.slice(0, 6).map((p, i) => (
+      <div
+        key={p.id}
+        className={`flex min-${rowHeight} items-center overflow-hidden py-0 ${i % 2 ? 'bg-[#00569F]' : 'bg-[#002F68]'}`}
+      >
+        <div className="flex items-center px-2 flex-1">
+          <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code}</span>
+          <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
+        </div>
+
+        {showPrice && (
+          <div
+            data-print-element="product-card-multiple-price"
+            className={`font-anton text-[12px] text-[#002F68] ${priceFont} ${
+              i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
+            } px-2 min-w-[96px] flex items-center justify-center self-stretch`}
+          >
+            R$ {p.price.toFixed(2).replace('.', ',')}
+          </div>
+        )}
+      </div>
+    ))}
+  </>
+);
