@@ -130,7 +130,7 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
 const CardContainer: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white relative">
-    <h3 className="text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3">
+    <h3 className="text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full bg-[#003169] py-3 px-3">
       {title}
     </h3>
     {children}
@@ -157,22 +157,22 @@ const ProductList = ({
     {products.slice(0, 6).map((p, i) => (
       <div
         key={p.id}
-        className={`flex ${rowHeight} items-center overflow-hidden ${i % 2 ? 'bg-[#00569F]' : 'bg-[#002F68]'}`}
+        className={`flex min-${rowHeight} items-center overflow-hidden py-0 ${i % 2 ? 'bg-[#00569F]' : 'bg-[#002F68]'}`}
       >
-        <div className="flex items-center pl-2 pr-2 flex-1">
+        <div className="flex items-center px-2 flex-1">
           <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code}</span>
           <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
         </div>
 
         {showPrice && (
-          <span
+          <div
             data-print-element="product-card-multiple-price"
-            className={`font-anton font-black text-[12px] text-[#002F68] ${priceFont} ${
+            className={`font-anton text-[12px] text-[#002F68] ${priceFont} ${
               i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
-            } px-2 h-full min-w-[96px] flex items-center justify-center`}
+            } px-2 min-w-[96px] h-[100%] flex items-center justify-center`}
           >
             R$ {p.price.toFixed(2).replace('.', ',')}
-          </span>
+          </div>
         )}
       </div>
     ))}
