@@ -174,7 +174,7 @@ const ProductList = ({
             data-print-element="product-card-multiple-price"
             className={`font-anton text-[12px] text-[#002F68] ${priceFont} ${
               i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
-            } px-2 min-w-[96px] h-[100%] flex items-center justify-center`}
+            } px-2 min-w-[96px] flex items-center justify-center self-stretch`}
           >
             R$ {p.price.toFixed(2).replace('.', ',')}
           </div>
