@@ -2,6 +2,25 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ProductGroup, FlyerConfig } from '../types';
 import { ImageProcessor } from '../utils/imageProcessor';
 
+// Helper function to darken a hex color
+const darkenColor = (hex: string, percent: number): string => {
+  // Remove # if present
+  const color = hex.replace('#', '');
+
+  // Convert to RGB
+  const r = parseInt(color.substring(0, 2), 16);
+  const g = parseInt(color.substring(2, 4), 16);
+  const b = parseInt(color.substring(4, 6), 16);
+
+  // Darken each channel
+  const newR = Math.max(0, Math.floor(r * (1 - percent)));
+  const newG = Math.max(0, Math.floor(g * (1 - percent)));
+  const newB = Math.max(0, Math.floor(b * (1 - percent)));
+
+  // Convert back to hex
+  return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+};
+
 const PriceDisplay = ({
   price,
   priceColor,
@@ -120,14 +139,18 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
   const count = group.products.length;
   const priceFont = count >= 6 ? 'text-[11px]' : count === 5 ? 'text-[12px]' : 'text-[13px]';
-  const rowHeight = count >= 6 ? 'h-[20px]' : count === 5 ? 'h-[22px]' : 'h-[24px]';
 
   return (
     <CardContainer title={group.title}>
       <ProductImageSection src={group.image} alt={group.title} />
 
       <div className="px-2 pb-2">
-        <ProductList products={group.products} showPrice priceFont={priceFont} rowHeight={rowHeight} />
+        <ProductList
+          products={group.products}
+          showPrice
+          priceFont={priceFont}
+          subtitleBackgroundColor={config.subtitleBackgroundColor}
+        />
       </div>
     </CardContainer>
   );
@@ -151,19 +174,27 @@ const ProductList = ({
   products,
   showPrice,
   priceFont = 'text-[13px]',
-  rowHeight = 'h-[24px]',
+  subtitleBackgroundColor,
 }: {
   products: ProductGroup['products'];
   showPrice: boolean;
   priceFont?: string;
-  rowHeight?: string;
-}) => (
-  <>
-    {products.slice(0, 6).map((p, i) => (
-      <div
-        key={p.id}
-        className={`flex min-${rowHeight} items-center overflow-hidden py-0 ${i % 2 ? 'bg-[#00569F]' : 'bg-[#002F68]'}`}
-      >
+  subtitleBackgroundColor?: string;
+}) => {
+  // Calcula cores baseadas no subtitleBackgroundColor
+  const baseColor = subtitleBackgroundColor || '#00579F';
+  const darkerColor = darkenColor(baseColor, 0.15); // 15% mais escuro
+
+  return (
+    <>
+      {products.slice(0, 6).map((p, i) => (
+        <div
+          key={p.id}
+          className="flex min-h-[24px] items-center overflow-hidden py-0"
+          style={{
+            backgroundColor: i % 2 === 0 ? darkerColor : baseColor,
+          }}
+        >
         <div className="flex items-center px-2 flex-1">
           <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code}</span>
           <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
@@ -182,4 +213,5 @@ const ProductList = ({
       </div>
     ))}
   </>
-);
+  );
+};
