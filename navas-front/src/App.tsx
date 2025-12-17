@@ -70,6 +70,7 @@ function App() {
             secondaryColor: '#2b3990',
             priceColor: '#ffffff',
             priceBackgroundColor: '#00569F',
+            subtitleBackgroundColor: '#00579F',
             createdAt: new Date(),
             updatedAt: new Date(),
             headerImageUrl: '',

@@ -70,7 +70,12 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
     return (
       <CardContainer title={product.description || ''}>
-        <div className="bg-[#00579F] text-white text-[13px] text-center font-bold">{product.code}</div>
+        <div
+          className="text-white text-[13px] text-center font-bold"
+          style={{ backgroundColor: config.subtitleBackgroundColor }}
+        >
+          {product.code}
+        </div>
 
         <ProductImageSection src={group.image} alt={product.description || ''} />
 
