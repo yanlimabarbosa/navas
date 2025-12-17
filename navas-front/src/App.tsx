@@ -12,7 +12,7 @@ import { MultiFlyerPreview } from './components/MultiFlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
 import { TemplateDownloadPanel } from './components/TemplateDownloadPanel';
 import { FlyerConfig, ProductGroup, Product } from './types';
-import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporter';
+import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporterV2';
 import { ImageProcessor } from './utils/imageProcessor';
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
