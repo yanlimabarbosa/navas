@@ -90,15 +90,18 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
     const product = group.products[0];
 
     return (
-      <CardContainer title={product.description || ''} subtitleBackgroundColor={config.subtitleBackgroundColor}>
+      <CardContainer
+        title={(product.description || '').trim()}
+        subtitleBackgroundColor={config.subtitleBackgroundColor}
+      >
         <div
           className="text-white text-[13px] text-center font-bold"
           style={{ backgroundColor: config.subtitleBackgroundColor }}
         >
-          {product.code}
+          {product.code.trim()}
         </div>
 
-        <ProductImageSection src={group.image} alt={product.description || ''} />
+        <ProductImageSection src={group.image} alt={(product.description || '').trim()} />
 
         <div className="absolute bottom-5 left-2">
           <PriceDisplay
@@ -113,8 +116,8 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
   if (isSamePrice) {
     return (
-      <CardContainer title={group.title} subtitleBackgroundColor={config.subtitleBackgroundColor}>
-        <ProductImageSection src={group.image} alt={group.title} />
+      <CardContainer title={group.title.trim()} subtitleBackgroundColor={config.subtitleBackgroundColor}>
+        <ProductImageSection src={group.image} alt={group.title.trim()} />
 
         <div
           ref={gridRef}
@@ -132,7 +135,11 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
           </div>
 
           <div className={stackSamePrice ? 'flex flex-col items-end text-right' : ''}>
-            <ProductList products={group.products} showPrice={false} />
+            <ProductList
+              products={group.products}
+              showPrice={false}
+              subtitleBackgroundColor={config.subtitleBackgroundColor}
+            />
           </div>
         </div>
       </CardContainer>
@@ -143,15 +150,17 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
   const priceFont = count >= 6 ? 'text-[11px]' : count === 5 ? 'text-[12px]' : 'text-[13px]';
 
   return (
-    <CardContainer title={group.title} subtitleBackgroundColor={config.subtitleBackgroundColor}>
-      <ProductImageSection src={group.image} alt={group.title} />
+    <CardContainer title={group.title.trim()} subtitleBackgroundColor={config.subtitleBackgroundColor}>
+      <ProductImageSection src={group.image} alt={group.title.trim()} />
 
-      <div className="px-2 pb-2">
+      <div className="px-2 pb-2 bg">
         <ProductList
           products={group.products}
           showPrice
           priceFont={priceFont}
           subtitleBackgroundColor={config.subtitleBackgroundColor}
+          priceBackgroundColor={config.priceBackgroundColor}
+          priceColor={config.priceColor}
         />
       </div>
     </CardContainer>
@@ -190,16 +199,20 @@ const ProductList = ({
   showPrice,
   priceFont = 'text-[13px]',
   subtitleBackgroundColor,
+  priceBackgroundColor,
+  priceColor,
 }: {
   products: ProductGroup['products'];
   showPrice: boolean;
   priceFont?: string;
   subtitleBackgroundColor?: string;
+  priceBackgroundColor?: string;
+  priceColor?: string;
 }) => {
   // Calcula cores baseadas no subtitleBackgroundColor
   const baseColor = subtitleBackgroundColor || '#00579F';
-  const darkerColor = darkenColor(baseColor, 0.15); // 15% mais escuro
-
+  const darkerColor = darkenColor(baseColor, 0.3);
+  const darkerBackgroundColor = darkenColor(priceBackgroundColor || '', 0.3);
   return (
     <>
       {products.slice(0, 6).map((p, i) => (
@@ -207,20 +220,24 @@ const ProductList = ({
           key={p.id}
           className="flex min-h-[24px] items-center overflow-hidden py-0"
           style={{
-            backgroundColor: i % 2 === 0 ? darkerColor : baseColor,
+            backgroundColor: i % 2 !== 0 ? darkerColor : baseColor,
           }}
         >
           <div className="flex items-center px-2 flex-1">
-            <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code}</span>
-            <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">{p.specifications}</span>
+            <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code.trim()}</span>
+            <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">
+              {(p.specifications || '').trim()}
+            </span>
           </div>
 
           {showPrice && (
             <div
               data-print-element="product-card-multiple-price"
-              className={`font-anton text-[12px] text-[#002F68] ${priceFont} ${
-                i % 2 === 0 ? 'bg-yellow-400' : 'bg-yellow-500'
-              } px-2 min-w-[96px] flex items-center justify-center self-stretch`}
+              className={`font-anton text-[12px] ${priceFont} px-2 min-w-[96px] flex items-center justify-center self-stretch`}
+              style={{
+                backgroundColor: i % 2 === 0 ? darkerBackgroundColor : priceBackgroundColor,
+                color: priceColor,
+              }}
             >
               R$ {p.price.toFixed(2).replace('.', ',')}
             </div>
