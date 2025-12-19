@@ -1,6 +1,6 @@
 {
   "name": "navas-electron-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Navas Promoções Desktop Application",
   "main": "electron/main.js",
   "scripts": {
@@ -40,10 +40,7 @@
     "win": {
       "target": "portable",
       "icon": "assets/navas-logo.jpg",
-      "sign": false,
-      "signAndEditExecutable": false,
-      "certificateFile": null,
-      "certificatePassword": null
+      "verifyUpdateCodeSignature": false
     },
     "mac": {
       "target": "dmg",
