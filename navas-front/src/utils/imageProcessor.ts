@@ -19,14 +19,14 @@ export class ImageProcessor {
         console.warn('Failed to get shared folder path:', error);
       }
     }
-    
+
     // Development mode fallback - use a mock path or disable image loading
     if (import.meta.env.DEV) {
       console.warn('Development mode: Images will not be loaded. Use Electron build for full functionality.');
       this.imagesPrefix = 'mock://images/';
       return;
     }
-    
+
     // Production mode - must have config file
     throw new Error('No shared folder configured. Check navas-caminho-imagens.txt file.');
   }
@@ -36,15 +36,15 @@ export class ImageProcessor {
     if (!this.imagesPrefix) {
       throw new Error('Images prefix not initialized. Call initializeImagesPrefix() first.');
     }
-    
+
     if (!imageName) {
       return '';
     }
-    
+
     const baseName = String(imageName);
     const extension = baseName.includes('.') ? '' : '.jpg';
     const fullPath = `${this.imagesPrefix}${baseName}${extension}`;
-    
+
     // In development mode with mock path, return a placeholder
     if (import.meta.env.DEV && this.imagesPrefix.startsWith('mock://')) {
       return `data:image/svg+xml;base64,${btoa(`
@@ -56,15 +56,12 @@ export class ImageProcessor {
         </svg>
       `)}`;
     }
-    
+
     return fullPath;
   }
 
   // Process image file for upload (header/footer images)
-  static async processImageFile(
-    file: File,
-    targetDimensions: { width: number; height: number }
-  ): Promise<string> {
+  static async processImageFile(file: File, targetDimensions: { width: number; height: number }): Promise<string> {
     if (!file.type.startsWith('image/')) {
       throw new Error('Arquivo deve ser uma imagem (JPG ou PNG)');
     }
@@ -79,7 +76,7 @@ export class ImageProcessor {
 
   // Resize image to target dimensions
   static resizeImage(
-    file: File, 
+    file: File,
     targetDimensions: { width: number; height: number },
     quality: number = 0.9
   ): Promise<string> {

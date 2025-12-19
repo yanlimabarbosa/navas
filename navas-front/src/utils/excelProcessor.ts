@@ -1,35 +1,35 @@
 import * as XLSX from 'xlsx';
 import { ProductGroup, Product, ExcelData, QUADRANTS_PER_FLYER } from '../types';
-import { ImageProcessor } from './imageProcessor';
 
 function getGroupType(products: Product[]): 'single' | 'same-price' | 'different-price' {
   if (products.length === 1) {
     return 'single';
   }
   const firstPrice = products[0].price;
-  const allSamePrice = products.every(p => p.price === firstPrice);
+  const allSamePrice = products.every((p) => p.price === firstPrice);
   return allSamePrice ? 'same-price' : 'different-price';
 }
 
 function isPhantomRow(row: Partial<ExcelData>): boolean {
   const invisibleChar = '\u200B';
-  
+
   const posicao = String(row.Posicao || '').trim();
   const codigo = String(row.Codigo || '').trim();
   const descricao = String(row.Descricao || '').trim();
   const preco = String(row.Preco || '').trim();
-  
-  const isInvisibleOrEmpty = (value: string) => 
+
+  const isInvisibleOrEmpty = (value: string) =>
     !value || value === invisibleChar || value.replace(/[\u200B\s]/g, '') === '';
-  
-  return isInvisibleOrEmpty(posicao) && 
-         isInvisibleOrEmpty(codigo) && 
-         isInvisibleOrEmpty(descricao) && 
-         isInvisibleOrEmpty(preco);
+
+  return (
+    isInvisibleOrEmpty(posicao) &&
+    isInvisibleOrEmpty(codigo) &&
+    isInvisibleOrEmpty(descricao) &&
+    isInvisibleOrEmpty(preco)
+  );
 }
 
 function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | null {
-  console.log(row);
   if (!row.Posicao || typeof row.Posicao !== 'number') {
     return `Linha ${rowIndex + 2}: Posição inválida ou faltando`;
   }
@@ -65,20 +65,20 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
 
     reader.onerror = () => {
       reader.abort();
-      reject(new Error("Erro ao ler o arquivo."));
+      reject(new Error('Erro ao ler o arquivo.'));
     };
 
     reader.onload = (event) => {
       const data = event.target?.result;
       if (!data) {
-        return reject(new Error("Nenhum dado encontrado no arquivo."));
+        return reject(new Error('Nenhum dado encontrado no arquivo.'));
       }
 
       try {
         // Parse Excel file
         const workbook = XLSX.read(data, { type: 'array' });
         if (!workbook.SheetNames.length) {
-          throw new Error("Arquivo Excel não contém planilhas.");
+          throw new Error('Arquivo Excel não contém planilhas.');
         }
 
         const sheetName = workbook.SheetNames[0];
@@ -86,14 +86,14 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
         const rawJson = XLSX.utils.sheet_to_json<ExcelData>(worksheet);
 
         if (!rawJson.length) {
-          throw new Error("Planilha está vazia ou não contém dados válidos.");
+          throw new Error('Planilha está vazia ou não contém dados válidos.');
         }
 
         // Filter out phantom rows with invisible characters
-        const json = rawJson.filter(row => !isPhantomRow(row));
+        const json = rawJson.filter((row) => !isPhantomRow(row));
 
         if (!json.length) {
-          throw new Error("Planilha não contém dados válidos após filtrar linhas vazias.");
+          throw new Error('Planilha não contém dados válidos após filtrar linhas vazias.');
         }
 
         // Validate each row
@@ -118,7 +118,7 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
         const productGroups: ProductGroup[] = Object.entries(groupedByPosition).map(([position, rows]) => {
           const firstRow = rows[0];
           const positionNumber = Number(position);
-          
+
           const products: Product[] = rows.map((row, index) => ({
             id: `prod-${position}-${index}`,
             code: String(row.Codigo),
@@ -145,7 +145,13 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
         resolve(productGroups);
       } catch (error) {
         console.error('Erro ao processar Excel:', error);
-        reject(new Error(error instanceof Error ? error.message : "Erro ao processar arquivo Excel. Verifique se o formato está correto."));
+        reject(
+          new Error(
+            error instanceof Error
+              ? error.message
+              : 'Erro ao processar arquivo Excel. Verifique se o formato está correto.'
+          )
+        );
       }
     };
 

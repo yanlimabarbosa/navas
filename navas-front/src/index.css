@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -53,9 +54,18 @@
   * {
     box-sizing: border-box;
   }
-  
+
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      'Cantarell',
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: hsl(var(--background));
@@ -70,12 +80,12 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-  
+
   .bg-pattern {
-    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0);
     background-size: 20px 20px;
   }
-  
+
   .aspect-square {
     aspect-ratio: 1 / 1;
   }
@@ -111,124 +121,74 @@
   animation: spin 1s linear infinite;
 }
 
-/* Print styles for PDF generation */
 @media print {
-  body {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .no-print {
-    display: none !important;
+  img, svg {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
   }
 }
 
-/* Export mode styles for better JPEG generation */
-.export-mode {
-  transform: none !important;
-  scale: none !important;
-  max-width: none !important;
-  max-height: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
+@media print {
+  [data-print-element="product-card-price"] {
+    font-family: Anton !important;
+    border-top-right-radius: 24px !important;
+    border-bottom-left-radius: 24px !important;
+    padding: 0.5rem !important;
+    gap: 0.25rem !important;
+    line-height: 1.2 !important;
+    word-break: nowrap !important;
+  }
+  [data-print-element="product-card-multiple-price"] {
+    font-family: Anton !important;
+    display: flex !important;
+    line-height: 1.2 !important;
+    word-break: nowrap !important;
+  }
+
+}
+.export-multiple-price {
+    display: flex !important;
+    font-family: Anton !important;
+    width: max-content !important;
+    font-weight: 600 !important;
+    flex-wrap: nowrap !important;
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    word-break: nowrap !important;
+    text-align: center !important;
+    text-wrap: nowrap !important;
+    
 }
 
-.export-mode * {
-  transform: none !important;
-  scale: none !important;
-}
 
-/* Ensure flexbox works consistently in export mode */
-.export-mode .flex {
+.export-price {
+
   display: flex !important;
+  min-width: max-content !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-top-right-radius: 24px !important;
+  border-bottom-left-radius: 24px !important;
+  padding: 0.5rem !important;
+  gap: 0.25rem !important;
+  line-height: 1.2 !important;
 }
 
-.export-mode .flex-col {
-  flex-direction: column !important;
+.export-price > * {
+  font-family: Anton !important;
+  font-weight: bold !important;
+  min-width: max-content !important;
+  overflow: visible !important;
+  word-break: nowrap!important;
 }
 
-.export-mode .flex-1 {
-  flex: 1 1 0% !important;
+/* Ajuste de largura do PriceDisplay durante exportação */
+.exporting .price-display {
+  min-width: 130px !important;
 }
 
-.export-mode .h-full {
-  height: 100% !important;
-}
-
-.export-mode .mt-auto {
-  margin-top: auto !important;
-}
-
-/* Ensure text truncation works properly in export mode */
-.export-mode .truncate {
-}
-
-/* Ensure all text styling is preserved */
-.export-mode .text-center {
-  text-align: center !important;
-}
-
-.export-mode .text-left {
-  text-align: left !important;
-}
-
-.export-mode .text-right {
-  text-align: right !important;
-}
-
-.export-mode .uppercase {
-  text-transform: uppercase !important;
-}
-
-.export-mode .font-bold {
-  font-weight: 700 !important;
-}
-
-.export-mode .font-semibold {
-  font-weight: 600 !important;
-}
-
-.export-mode .font-extrabold {
-  font-weight: 800 !important;
-}
-
-/* Ensure proper sizing */
-.export-mode .w-full {
-  width: 100% !important;
-}
-
-.export-mode .h-full {
-  height: 100% !important;
-}
-
-/* Ensure proper positioning */
-.export-mode .relative {
-  position: relative !important;
-}
-
-.export-mode .absolute {
-  position: absolute !important;
-}
-
-/* Ensure proper background colors */
-.export-mode .bg-white {
-  background-color: #ffffff !important;
-}
-
-.export-mode .bg-black {
-  background-color: #000000 !important;
-}
-
-.export-mode .bg-yellow-400 {
-  background-color: #facc15 !important;
-}
-
-/* Ensure proper text colors */
-.export-mode .text-white {
-  color: #ffffff !important;
-}
-
-.export-mode .text-black {
-  color: #000000 !important;
+/* Evita sobreposição da fonte Anton durante exportação */
+.exporting .price-display span {
+  flex-shrink: 0 !important;
 }
