@@ -5,9 +5,51 @@ const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow;
 
+// Settings management
+const SETTINGS_FILE = 'user-settings.json';
+
+function getSettingsPath() {
+  return path.join(app.getPath('userData'), SETTINGS_FILE);
+}
+
+function loadSettings() {
+  try {
+    const settingsPath = getSettingsPath();
+    if (fs.existsSync(settingsPath)) {
+      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    }
+  } catch (error) {
+    console.error('Failed to load settings:', error);
+  }
+  return {};
+}
+
+function saveSettings(settings) {
+  try {
+    const settingsPath = getSettingsPath();
+    const dir = path.dirname(settingsPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    console.log('Settings saved to:', settingsPath);
+    return true;
+  } catch (error) {
+    console.error('Failed to save settings:', error);
+    return false;
+  }
+}
+
 // Get images path from config file with fallback
 function getImagensProdutosPath() {
-  // Look for config file in the same directory as the executable
+  // 1. Check user settings
+  const settings = loadSettings();
+  if (settings.imagesPath && fs.existsSync(settings.imagesPath)) {
+    console.log('Using IMAGENS_PRODUTOS_PATH from user settings:', settings.imagesPath);
+    return settings.imagesPath;
+  }
+
+  // 2. Look for config file in the same directory as the executable (Legacy)
   const exePath = path.dirname(process.execPath);
   const configPath = path.join(exePath, 'navas-caminho-imagens.txt');
   
@@ -23,7 +65,7 @@ function getImagensProdutosPath() {
     console.warn('Failed to read config file:', error);
   }
   
-  // Fallback to local path
+  // 3. Fallback to local path
   const localPath = path.join(process.resourcesPath, 'navas-front', 'dist', 'imagens_produtos');
   console.log('Using local fallback path:', localPath);
   return localPath;
@@ -98,6 +140,37 @@ ipcMain.handle('get-backend-url', () => {
 // Handle request for images path
 ipcMain.handle('get-imagens-path', () => {
   return getImagensProdutosPath();
+});
+
+// Handle directory selection for images
+ipcMain.handle('select-images-directory', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Selecionar pasta de imagens dos produtos'
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error selecting directory:', error);
+    return null;
+  }
+});
+
+// Handle saving settings
+ipcMain.handle('save-settings', (event, newSettings) => {
+  const currentSettings = loadSettings();
+  const updatedSettings = { ...currentSettings, ...newSettings };
+  return saveSettings(updatedSettings);
+});
+
+// Handle getting settings
+ipcMain.handle('get-settings', () => {
+  return loadSettings();
 });
 
 // Handle directory selection for batch export

@@ -77,16 +77,4 @@ export const FOOTER_DIMENSIONS: ImageDimensions = {
 
 export const QUADRANTS_PER_FLYER = 12;
 
-// Electron API types
-declare global {
-  interface Window {
-    electronAPI?: {
-      getBackendUrl: () => Promise<string>;
-      onBackendReady: (callback: () => void) => void;
-      onBackendError: (callback: (error: string) => void) => void;
-      onBackendStatus: (callback: (status: string) => void) => void;
-    };
-  }
-}
-
 export {};

@@ -11,6 +11,7 @@ import { FlyerPreview } from './components/FlyerPreview';
 import { MultiFlyerPreview } from './components/MultiFlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
 import { TemplateDownloadPanel } from './components/TemplateDownloadPanel';
+import { SettingsDialog } from './components/SettingsDialog';
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporterV2';
 import { ImageProcessor } from './utils/imageProcessor';
@@ -39,6 +40,7 @@ function App() {
     html: false,
   });
   const [dragActive, setDragActive] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
 
   // Initialize images path
@@ -182,6 +184,9 @@ function App() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)}>
+                    <Settings className="h-5 w-5" />
+                  </Button>
                   <ThemeToggle />
                 </div>
               </div>
@@ -406,6 +411,9 @@ function App() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)}>
+                  <Settings className="h-5 w-5" />
+                </Button>
                 <ThemeToggle />
               </div>
             </div>
@@ -489,6 +497,7 @@ function App() {
     <ThemeProvider defaultTheme="light" storageKey="navas-theme">
       <div className="min-h-screen bg-background text-foreground">{renderContent()}</div>
       <Toaster />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </ThemeProvider>
   );
 }

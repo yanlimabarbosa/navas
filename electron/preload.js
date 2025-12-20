@@ -8,5 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onImagensPath: (callback) => ipcRenderer.on('imagens-path', callback),
   getImagensPath: () => ipcRenderer.invoke('get-imagens-path'),
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
+  selectImagesDirectory: () => ipcRenderer.invoke('select-images-directory'),
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
   saveImageToDirectory: (dataURL, filename, directory) => ipcRenderer.invoke('save-image-to-directory', dataURL, filename, directory),
 });
