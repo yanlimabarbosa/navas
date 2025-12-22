@@ -119,13 +119,21 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
           const firstRow = rows[0];
           const positionNumber = Number(position);
 
-          const products: Product[] = rows.map((row, index) => ({
-            id: `prod-${position}-${index}`,
-            code: String(row.Codigo),
-            price: Number(String(row.Preco).replace(',', '.')), // Handle both dot and comma for decimals
-            description: row.Descricao,
-            specifications: row.Diferencial,
-          }));
+          const products: Product[] = rows.map((row, index) => {
+            const id = `prod-${position}-${index}`;
+            const code = String(row.Codigo).trim();
+            const price = Number(String(row.Preco).replace(',', '.').trim());
+            const description = row.Descricao.trim();
+            const specifications = row.Diferencial ? row.Diferencial?.trim() : '2';
+
+            return {
+              id,
+              code,
+              price,
+              description,
+              specifications,
+            };
+          });
 
           // Get image path, using product code as fallback if image name is not provided
           const imageName = String(firstRow.Imagem || firstRow.Codigo);

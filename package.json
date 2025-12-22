@@ -1,6 +1,6 @@
 {
   "name": "navas-electron-app",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Navas Promoções Desktop Application",
   "main": "electron/main.js",
   "scripts": {

@@ -114,8 +114,8 @@ async function generateImageData(element: HTMLElement): Promise<Uint8Array> {
         width: exportElement.offsetWidth + 'px',
         height: exportElement.offsetHeight + 'px',
       },
-      fontEmbedCSS: '', // Disable default font embedding if we are handling it manually, or let it handle it. 
-      // html-to-image handles fonts better, but we already have manual injection. 
+      fontEmbedCSS: '', // Disable default font embedding if we are handling it manually, or let it handle it.
+      // html-to-image handles fonts better, but we already have manual injection.
       // Let's try with our manual injection first since it's already set up.
     });
 
@@ -161,6 +161,7 @@ async function generatePDFData(element: HTMLElement): Promise<Uint8Array> {
     left: 0;
   `;
 
+  injectExportFonts(clonedElement);
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
 
@@ -303,6 +304,7 @@ async function exportSingleFlyerAsPDF(element: HTMLElement, filename: string): P
     transform: none;
  
   `;
+  injectExportFonts(clonedElement);
   applyPrintOptimizations(clonedElement);
   exportContainer.appendChild(clonedElement);
   document.body.appendChild(exportContainer);
@@ -485,6 +487,14 @@ export async function exportElementAsImageBatch(element: HTMLElement, baseFilena
       console.log('🎉 Files saved to selected folder successfully');
       return;
     } catch (error) {
+      // Check for DOMException (AbortError when user cancels)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('❌ Folder selection cancelled by user');
+        throw new Error(
+          'Seleção de pasta foi cancelada. Tente novamente e selecione uma pasta para salvar as imagens.'
+        );
+      }
+      // Check for regular Error with AbortError name
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('❌ Folder selection cancelled by user');
         throw new Error(
@@ -573,6 +583,12 @@ export async function exportElementAsPDFBatch(element: HTMLElement, baseFilename
       console.log('🎉 PDF files saved to selected folder successfully');
       return;
     } catch (error) {
+      // Check for DOMException (AbortError when user cancels)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('❌ Folder selection cancelled by user');
+        throw new Error('Seleção de pasta foi cancelada. Tente novamente e selecione uma pasta para salvar os PDFs.');
+      }
+      // Check for regular Error with AbortError name
       if (error instanceof Error && error.name === 'AbortError') {
         console.log('❌ Folder selection cancelled by user');
         throw new Error('Seleção de pasta foi cancelada. Tente novamente e selecione uma pasta para salvar os PDFs.');

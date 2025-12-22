@@ -121,9 +121,8 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
         <div
           ref={gridRef}
-          className={`absolute bottom-0 w-full pl-1 pb-4 grid gap-2 ${
-            stackSamePrice ? 'grid-cols-1 justify-items-end' : 'grid-cols-2'
-          }`}
+          className={`absolute bottom-0 w-full pl-1 pb-4 grid gap-2 ${stackSamePrice ? 'grid-cols-1 justify-items-end' : 'grid-cols-2'
+            }`}
         >
           <div ref={priceRef} className="flex justify-end">
             <PriceDisplay
@@ -136,6 +135,7 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
           <div className={stackSamePrice ? 'flex flex-col items-end text-right' : ''}>
             <ProductList
+              isSamePrice={true}
               products={group.products}
               showPrice={false}
               subtitleBackgroundColor={config.subtitleBackgroundColor}
@@ -177,7 +177,7 @@ const CardContainer: React.FC<{ title: string; subtitleBackgroundColor?: string;
   return (
     <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white relative">
       <h3
-        className={`text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full py-3 px-3`}
+        className={`text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full py-3 px-3 z-10`}
         style={{
           backgroundColor: darkerColor,
         }}
@@ -201,6 +201,7 @@ const ProductList = ({
   subtitleBackgroundColor,
   priceBackgroundColor,
   priceColor,
+  isSamePrice = false,
 }: {
   products: ProductGroup['products'];
   showPrice: boolean;
@@ -208,11 +209,13 @@ const ProductList = ({
   subtitleBackgroundColor?: string;
   priceBackgroundColor?: string;
   priceColor?: string;
+  isSamePrice?: boolean;
 }) => {
   // Calcula cores baseadas no subtitleBackgroundColor
   const baseColor = subtitleBackgroundColor || '#00579F';
   const darkerColor = darkenColor(baseColor, 0.3);
   const darkerBackgroundColor = darkenColor(priceBackgroundColor || '', 0.3);
+
   return (
     <>
       {products.slice(0, 6).map((p, i) => (
@@ -223,11 +226,14 @@ const ProductList = ({
             backgroundColor: i % 2 !== 0 ? darkerColor : baseColor,
           }}
         >
-          <div className="flex items-center px-2 flex-1">
-            <span className="text-white text-[12px] font-bold whitespace-nowrap">{p.code.trim()}</span>
-            <span className="text-[#f5f3f3] text-[12px] font-light text-center w-full">
-              {(p.specifications || '').trim()}
-            </span>
+          <div className="flex items-center px-2 flex-1 min-w-0">
+            <span className="text-white text-[12px] font-light ">{p.code || ''}</span>
+            {p.specifications && (
+              <span className="text-gray-200 text-[12px] font-light ml-1  flex-1 wrap-break-word text-center">
+                {isSamePrice ? '- ' : ''}
+                {p.specifications}
+              </span>
+            )}
           </div>
 
           {showPrice && (
