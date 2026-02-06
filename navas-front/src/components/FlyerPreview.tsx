@@ -78,11 +78,11 @@ export const FlyerPreview = forwardRef<HTMLDivElement, FlyerPreviewProps>(({ gro
           <div className="p-3 h-full flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                <div className="text-blue-800 font-bold text-xs">NAVAS</div>
+                <div className="text-blue-800 font-bold text-xs">SORYAN</div>
               </div>
               <div>
-                <h3 className="text-lg font-bold">NAVAS</h3>
-                <p className="text-xs opacity-90">DISTRIBUIÇÃO</p>
+                <h3 className="text-lg font-bold">SORYAN</h3>
+                <p className="text-xs opacity-90">ASSESSORIA</p>
               </div>
             </div>
             {config.footerText && (

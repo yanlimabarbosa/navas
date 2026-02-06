@@ -10,6 +10,14 @@ function getGroupType(products: Product[]): 'single' | 'same-price' | 'different
   return allSamePrice ? 'same-price' : 'different-price';
 }
 
+function normalizeImageName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 function isPhantomRow(row: Partial<ExcelData>): boolean {
   const invisibleChar = '\u200B';
 
@@ -45,9 +53,7 @@ function validateExcelRow(row: Partial<ExcelData>, rowIndex: number): string | n
   if (!row.Preco || isNaN(Number(String(row.Preco).replace(',', '.')))) {
     return `Linha ${rowIndex + 2}: Preço inválido ou faltando`;
   }
-  if (!row.Imagem) {
-    return `Linha ${rowIndex + 2}: Nome da imagem faltando`;
-  }
+  // Image column validation removed to allow auto-fetch from description
   return null;
 }
 
@@ -127,8 +133,15 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
             specifications: row.Diferencial,
           }));
 
-          // Get image path, using product code as fallback if image name is not provided
-          const imageName = String(firstRow.Imagem || firstRow.Codigo);
+          // Get image path: prefer 'Imagem' column, fallback to normalized 'Descricao', then 'Codigo'
+          let imageName = String(firstRow.Imagem || '').trim();
+          if (!imageName && firstRow.Descricao) {
+            imageName = normalizeImageName(firstRow.Descricao);
+          }
+          if (!imageName) {
+            imageName = String(firstRow.Codigo);
+          }
+
           // Note: imagePath will be resolved asynchronously in the component
 
           return {
@@ -158,3 +171,4 @@ export const processExcelFile = (file: File): Promise<ProductGroup[]> => {
     reader.readAsArrayBuffer(file);
   });
 };
+

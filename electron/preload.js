@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getImagensPath: () => ipcRenderer.invoke('get-imagens-path'),
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
   saveImageToDirectory: (dataURL, filename, directory) => ipcRenderer.invoke('save-image-to-directory', dataURL, filename, directory),
+  getLicenseStatus: () => ipcRenderer.invoke('get-license-status'),
 });

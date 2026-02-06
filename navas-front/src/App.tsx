@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { ThemeProvider } from './components/theme-provider';
 import { ThemeToggle } from './components/theme-toggle';
 import { Button } from './components/ui/button';
@@ -11,9 +11,23 @@ import { FlyerPreview } from './components/FlyerPreview';
 import { MultiFlyerPreview } from './components/MultiFlyerPreview';
 import { ConfigPanel } from './components/ConfigPanel';
 import { TemplateDownloadPanel } from './components/TemplateDownloadPanel';
+import { LicenseExpiredScreen } from './components/LicenseExpiredScreen';
 import { FlyerConfig, ProductGroup, Product } from './types';
 import { exportElementAsImage, exportElementAsPDF } from './utils/htmlExporterV2';
 import { ImageProcessor } from './utils/imageProcessor';
+
+// License Status interface
+interface LicenseStatus {
+  valid: boolean;
+  reason?: string;
+  message?: string;
+  planType?: string;
+  clientName?: string;
+  activationDate?: string;
+  expirationDate?: string;
+  daysRemaining?: number;
+  daysExpired?: number;
+}
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
   return (
@@ -41,8 +55,36 @@ function App() {
   const [dragActive, setDragActive] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
 
+  // License state
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null);
+  const [isCheckingLicense, setIsCheckingLicense] = useState(true);
+
+  // Check license on startup
+  useEffect(() => {
+    const checkLicense = async () => {
+      try {
+        if (window.electronAPI?.getLicenseStatus) {
+          const status = await window.electronAPI.getLicenseStatus();
+          console.log('License status:', status);
+          setLicenseStatus(status);
+        } else {
+          // Running in browser (development mode) - allow access
+          setLicenseStatus({ valid: true });
+        }
+      } catch (error) {
+        console.error('Failed to check license:', error);
+        // On error, block access
+        setLicenseStatus({ valid: false, reason: 'error', message: 'Erro ao verificar licença' });
+      } finally {
+        setIsCheckingLicense(false);
+      }
+    };
+
+    checkLicense();
+  }, []);
+
   // Initialize images path
-  React.useEffect(() => {
+  useEffect(() => {
     const initializeImages = async () => {
       try {
         await ImageProcessor.initializeImagesPrefix();
@@ -189,11 +231,10 @@ function App() {
               <Card className="p-8">
                 <CardContent className="p-0">
                   <div
-                    className={`text-center border-2 border-dashed rounded-lg p-8 transition-colors ${
-                      dragActive
-                        ? 'border-primary bg-primary/5'
-                        : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'
-                    }`}
+                    className={`text-center border-2 border-dashed rounded-lg p-8 transition-colors ${dragActive
+                      ? 'border-primary bg-primary/5'
+                      : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50'
+                      }`}
                     role="button"
                     tabIndex={0}
                     onDragEnter={handleDrag}
@@ -248,17 +289,22 @@ function App() {
                           <strong>Preco:</strong> Preço do produto (ex: 10,50 ou 10.50)
                         </li>
                         <li>
-                          <strong>Descricao:</strong> Nome/descrição do produto
+                          <strong>Descrição:</strong> Nome do produto (a imagem é buscada automaticamente por este nome!)
                         </li>
                         <li>
                           <strong>Diferencial:</strong> Especificações técnicas (ex: 5MX19MM, 3/8")
                         </li>
-                        <li>
-                          <strong>Imagem:</strong> Nome do arquivo de imagem (sem extensão)
-                        </li>
                       </ul>
 
-                      <div className="bg-background p-3 rounded">
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded mt-3 border border-green-200 dark:border-green-800">
+                        <p className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">🖼️ Imagens automáticas:</p>
+                        <p className="text-xs text-green-600 dark:text-green-300">
+                          O sistema busca a imagem automaticamente pelo nome do produto na <strong>Descrição</strong>.
+                          Por exemplo: se a descrição for "FURADEIRA IMPACTO", o sistema procura por "furadeira impacto.jpg" na pasta de imagens.
+                        </p>
+                      </div>
+
+                      <div className="bg-background p-3 rounded mt-3">
                         <p className="font-medium mb-2">🎯 Layout do Encarte (4x3 = 12 posições por página):</p>
                         <div className="grid grid-cols-4 gap-1 text-center text-xs font-mono">
                           <div className="bg-primary/10 p-1 rounded">1</div>
@@ -289,7 +335,6 @@ function App() {
                                 <th className="text-left p-1 whitespace-nowrap">Preco</th>
                                 <th className="text-left p-1 whitespace-nowrap">Descricao</th>
                                 <th className="text-left p-1 whitespace-nowrap">Diferencial</th>
-                                <th className="text-left p-1 whitespace-nowrap">Imagem</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-muted">
@@ -300,7 +345,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">6,69</td>
                                 <td className="p-1 whitespace-nowrap">FURADEIRA IMPACTO</td>
                                 <td className="p-1 whitespace-nowrap">750W</td>
-                                <td className="p-1 whitespace-nowrap">1408177</td>
                               </tr>
                               {/* Mesmo Preço - 3 produtos */}
                               <tr>
@@ -309,7 +353,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">15,50</td>
                                 <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
                                 <td className="p-1 whitespace-nowrap">M6</td>
-                                <td className="p-1 whitespace-nowrap">porca_m6</td>
                               </tr>
                               <tr>
                                 <td className="p-1 whitespace-nowrap">2</td>
@@ -317,7 +360,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">15,50</td>
                                 <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
                                 <td className="p-1 whitespace-nowrap">M8</td>
-                                <td className="p-1 whitespace-nowrap">porca_m6</td>
                               </tr>
                               <tr>
                                 <td className="p-1 whitespace-nowrap">2</td>
@@ -325,7 +367,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">15,50</td>
                                 <td className="p-1 whitespace-nowrap">PORCA SEXTAVADA</td>
                                 <td className="p-1 whitespace-nowrap">M10</td>
-                                <td className="p-1 whitespace-nowrap">porca_m6</td>
                               </tr>
                               {/* Preços Diferentes - 2 produtos */}
                               <tr>
@@ -334,7 +375,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">8,90</td>
                                 <td className="p-1 whitespace-nowrap">PARAFUSO PHILLIPS</td>
                                 <td className="p-1 whitespace-nowrap">3,5x25mm</td>
-                                <td className="p-1 whitespace-nowrap">parafuso_1</td>
                               </tr>
                               <tr>
                                 <td className="p-1 whitespace-nowrap">3</td>
@@ -342,7 +382,6 @@ function App() {
                                 <td className="p-1 whitespace-nowrap">12,90</td>
                                 <td className="p-1 whitespace-nowrap">PARAFUSO PHILLIPS</td>
                                 <td className="p-1 whitespace-nowrap">4,0x30mm</td>
-                                <td className="p-1 whitespace-nowrap">parafuso_1</td>
                               </tr>
                             </tbody>
                           </table>
@@ -350,16 +389,16 @@ function App() {
                       </div>
 
                       <div className="mt-2 space-y-1 text-xs">
-                        <p className="font-medium">📝 Exemplos acima mostram:</p>
+                        <p className="font-medium">📝 Como funciona:</p>
                         <ul className="ml-4 space-y-1">
                           <li>
-                            • <strong>Posição 1:</strong> Produto único (Furadeira)
+                            • A imagem é buscada pelo <strong>nome do produto</strong> na coluna Descrição
                           </li>
                           <li>
-                            • <strong>Posição 2:</strong> Mesmo preço (3 porcas diferentes, R$ 15,50 cada)
+                            • Ex: Descrição "FURADEIRA IMPACTO" → busca "furadeira impacto.jpg"
                           </li>
                           <li>
-                            • <strong>Posição 3:</strong> Preços diferentes (2 parafusos, R$ 8,90 e R$ 12,90)
+                            • Mantenha os arquivos de imagem com o mesmo nome dos produtos
                           </li>
                         </ul>
                       </div>
@@ -484,6 +523,29 @@ function App() {
         return null;
     }
   };
+
+  // Show loading while checking license
+  if (isCheckingLicense) {
+    return (
+      <ThemeProvider defaultTheme="light" storageKey="navas-theme">
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Verificando licença...</p>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  // Show license expired screen if license is invalid
+  if (licenseStatus && !licenseStatus.valid) {
+    return (
+      <ThemeProvider defaultTheme="light" storageKey="navas-theme">
+        <LicenseExpiredScreen licenseStatus={licenseStatus} />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="navas-theme">

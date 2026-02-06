@@ -57,7 +57,7 @@ export interface ExcelData {
   Descricao: string;
   Diferencial?: string;
   Preco: number;
-  Imagem: string;
+  Imagem?: string;
 }
 
 export interface ImageDimensions {
@@ -85,8 +85,23 @@ declare global {
       onBackendReady: (callback: () => void) => void;
       onBackendError: (callback: (error: string) => void) => void;
       onBackendStatus: (callback: (status: string) => void) => void;
+      onImagensPath: (callback: (event: any, path: string) => void) => void;
+      getImagensPath: () => Promise<string>;
+      selectDirectory: () => Promise<string | null>;
+      saveImageToDirectory: (dataURL: string, filename: string, directory: string) => Promise<{ success: boolean; path?: string; error?: string }>;
+      getLicenseStatus: () => Promise<{
+        valid: boolean;
+        reason?: string;
+        message?: string;
+        planType?: string;
+        clientName?: string;
+        activationDate?: string;
+        expirationDate?: string;
+        daysRemaining?: number;
+        daysExpired?: number;
+      }>;
     };
   }
 }
 
-export {};
+export { };

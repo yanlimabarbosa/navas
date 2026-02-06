@@ -63,9 +63,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
         <CardContent className="p-8 text-center">
           <div className="mb-6">
             <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-3xl font-bold text-white">N</span>
+              <span className="text-3xl font-bold text-white">S</span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Navas Promoções</h1>
+            <h1 className="text-2xl font-bold text-foreground">Soryan Assessoria</h1>
             <p className="text-sm text-muted-foreground">Iniciando aplicação</p>
           </div>
 
@@ -96,7 +96,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onBackendReady, onBa
 
           <div className="mt-6 pt-4 border-t border-muted">
             <p className="text-xs text-muted-foreground">Aguardando servidor...</p>
-            <p className="text-xs text-muted-foreground mt-1">v1.0.0 • Aplicação Navas</p>
+            <p className="text-xs text-muted-foreground mt-1">v1.0.0 • Aplicação Soryan</p>
           </div>
         </CardContent>
       </Card>

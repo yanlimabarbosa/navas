@@ -10,7 +10,7 @@ export class ImageProcessor {
         if (typeof electronAPI.getImagensPath === 'function') {
           const sharedPath = await electronAPI.getImagensPath();
           if (sharedPath) {
-            this.imagesPrefix = sharedPath.replace(/\\/g, '/') + '/';
+            this.imagesPrefix = 'file://' + sharedPath.replace(/\\/g, '/') + '/';
             console.log('Using shared folder:', this.imagesPrefix);
             return;
           }
@@ -28,7 +28,7 @@ export class ImageProcessor {
     }
 
     // Production mode - must have config file
-    throw new Error('No shared folder configured. Check navas-caminho-imagens.txt file.');
+    throw new Error('No shared folder configured. Check soryan-caminho-imagens.txt file.');
   }
 
   // Get the full image path

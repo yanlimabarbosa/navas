@@ -1,7 +1,7 @@
 {
-  "name": "navas-electron-app",
+  "name": "soryan-electron-app",
   "version": "1.0.0",
-  "description": "Navas Promoções Desktop Application",
+  "description": "Soryan Assessoria Desktop Application",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
@@ -12,7 +12,12 @@
     "dist": "npm run build && electron-builder",
     "postinstall": "electron-builder install-app-deps"
   },
-  "keywords": ["electron", "desktop", "navas", "promocoes"],
+  "keywords": [
+    "electron",
+    "desktop",
+    "navas",
+    "promocoes"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
@@ -20,8 +25,8 @@
     "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.navas.promocoes",
-    "productName": "Navas Promoções",
+    "appId": "com.soryan.assessoria",
+    "productName": "Soryan Assessoria",
     "directories": {
       "output": "dist"
     },
@@ -37,14 +42,16 @@
         "to": "navas-front/dist"
       }
     ],
+    "extraFiles": [
+      "soryan-caminho-imagens.txt"
+    ],
     "win": {
-      "target": "portable",
+      "target": "dir",
       "icon": "assets/navas-logo.jpg",
-      "sign": false,
       "signAndEditExecutable": false,
-      "certificateFile": null,
-      "certificatePassword": null
+      "signDlls": false
     },
+    "forceCodeSigning": false,
     "mac": {
       "target": "dmg",
       "icon": "assets/navas-logo.jpg"
@@ -54,4 +61,4 @@
       "icon": "assets/navas-logo.jpg"
     }
   }
-} 
+}
