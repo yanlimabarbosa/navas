@@ -121,9 +121,8 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
 
         <div
           ref={gridRef}
-          className={`absolute bottom-0 w-full pl-1 pb-4 grid gap-2 ${
-            stackSamePrice ? 'grid-cols-1 justify-items-end' : 'grid-cols-2'
-          }`}
+          className={`absolute bottom-0 w-full pl-1 pb-4 grid gap-2 ${stackSamePrice ? 'grid-cols-1 justify-items-end' : 'grid-cols-2'
+            }`}
         >
           <div ref={priceRef} className="flex justify-end">
             <PriceDisplay
@@ -153,7 +152,7 @@ export const ProductCard: React.FC<{ group: ProductGroup; config: FlyerConfig }>
     <CardContainer title={group.title.trim()} subtitleBackgroundColor={config.subtitleBackgroundColor}>
       <ProductImageSection src={group.image} alt={group.title.trim()} />
 
-      <div className="px-2 pb-2 bg">
+      <div className="px-2 pb-2 bg-white">
         <ProductList
           products={group.products}
           showPrice
@@ -175,7 +174,10 @@ const CardContainer: React.FC<{ title: string; subtitleBackgroundColor?: string;
   const baseColor = subtitleBackgroundColor || '#00579F';
   const darkerColor = darkenColor(baseColor, 0.15);
   return (
-    <div className="flex flex-col h-full rounded-3xl overflow-hidden bg-white relative">
+    <div
+      className="flex flex-col h-full rounded-3xl overflow-hidden bg-white relative"
+      style={{ backgroundColor: 'white' }}
+    >
       <h3
         className={`text-[13px] font-bold text-[#f0f0f0] text-center leading-tight uppercase tracking-tight break-words w-full py-3 px-3`}
         style={{
